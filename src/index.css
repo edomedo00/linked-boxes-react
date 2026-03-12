@@ -1,0 +1,321 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+*,
+*::after,
+*::before {
+  box-sizing: inherit;
+}
+
+html {
+  box-sizing: border-box;
+  font-size: 62.5%;
+}
+
+body {
+  font-family: "Suisse Int'l Mono";
+  font-weight: 400;
+  font-size: 1.3rem;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+
+  background-color: #e6e6e6;
+
+  min-height: 100vh;
+}
+
+.main {
+  padding: 3rem;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: 3rem;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.controls {
+  grid-column: span 3;
+  display: grid;
+  grid-template-rows: repeat(4, min-content) 1fr;
+  background-color: #ffffff;
+  border-radius: 3rem;
+  padding: 3rem;
+}
+
+.controls-title {
+  margin-top: 0;
+  padding-bottom: 3rem;
+  border-bottom: solid 1px #f4f5f5;
+}
+
+.controls-colors {
+  padding-top: 2rem;
+}
+
+.colors-text {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1.3rem;
+}
+
+.color-name {
+  position: relative;
+  padding: 0.1rem 0.6rem;
+}
+
+.color-selector {
+  display: flex;
+  gap: 0.8rem;
+  margin: 0.3rem;
+  padding-bottom: 3rem;
+  border-bottom: solid 1px #f4f5f5;
+}
+
+.btn-color {
+  border: none;
+
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 1rem;
+
+  cursor: pointer;
+}
+
+.selected-color {
+  /* outline: 1px solid #e6e6e6; */
+  outline-offset: 3px;
+}
+
+.controls-ropes {
+  padding-top: 2rem;
+  border-bottom: solid 1px #f4f5f5;
+}
+
+.controls-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 3rem;
+}
+
+.controls-boxes {
+  padding-top: 2rem;
+}
+
+.canvas-container {
+  grid-column: span 9;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  /* width: 100%; */
+  background: transparent;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 0.6rem;
+  background: #f4f5f5;
+  border-radius: 0.3rem;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0.2rem;
+  height: 1.6rem;
+  background: #000000;
+  margin-top: -0.5rem;
+}
+
+.custom-slider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+.custom-slider input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.slider-track-left,
+.slider-track-right {
+  height: 0.6rem;
+  border-radius: 0.3rem;
+}
+
+.slider-track-left {
+  flex: var(--left);
+  background: #000000;
+}
+.slider-track-right {
+  flex: var(--right);
+  background: #f4f5f5;
+}
+
+.slider-thumb {
+  width: 0.2rem;
+  height: 1.6rem;
+  background: #000000;
+  border-radius: 0.1rem;
+  flex-shrink: 0;
+}
+
+.controls-download {
+  justify-self: center;
+  margin-top: auto;
+  padding-bottom: 3rem;
+}
+
+.btn {
+  background-color: #f4f5f5;
+  color: #000000;
+  border: none;
+  border-radius: 5rem;
+
+  font-family: "Suisse Int'l Mono";
+  font-weight: 400;
+  font-size: 1.3rem;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  cursor: pointer;
+}
+
+.btn-download {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.download-dot {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 100px;
+  background-color: #10e41a;
+}
+
+.download-text {
+}
+
+.canvas-container {
+  display: grid;
+  grid-template-rows: auto min-content;
+}
+
+.canvas {
+  /* height: auto; */
+}
+
+.box-controls {
+  padding-top: 3rem;
+  justify-self: center;
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 0.4rem 0.4rem 0.4rem 2.5rem;
+  border-radius: 100px;
+}
+
+.btn-add-box {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 0.4rem 0.4rem 0.4rem 2.5rem;
+}
+
+.btn-box-controls {
+  width: 4.5rem;
+  height: 4.5rem;
+
+  position: relative;
+}
+
+.plus-symbol-1 {
+  position: absolute;
+  background-color: #000000;
+  width: 1rem;
+  height: 1px;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+}
+
+.plus-symbol-2 {
+  position: absolute;
+  background-color: #000000;
+  width: 1px;
+  height: 1rem;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+}
+
+.controls-box-divider {
+  border-right: solid 1.5px #f4f5f5;
+  height: 3.3rem;
+}
+
+.box-controls-icons {
+  display: flex;
+  gap: 1rem;
+  /* padding: 0rem rem; */
+}
+
+.btn-box-icons {
+  background-color: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.btn-box-icons:hover {
+  cursor: pointer;
+}
+
+.selected-icon {
+  width: 0.4rem;
+  height: 0.4rem;
+  background-color: #10e41a;
+  border-radius: 100px;
+
+  position: absolute;
+  bottom: -0.3rem;
+  /* left: -50%; */
+  /* translate: 50%; */
+}
+
+/* 
+sliders and the paddings from them, they are not margin right
+
+download image text is not vertically centered
+
+the gap in the box controls goes to 2rem when selected and 1 rem when add a box
+
+el texto del nombre del color se pierde con el color de la fuente
+*/
