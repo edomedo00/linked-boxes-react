@@ -50,6 +50,7 @@ export default function MatterSketch() {
   const [selectedShape, setSelectedShape] = useState("circle");
   const [gravity, setGravity] = useState(1);
   const [count, setCount] = useState(0);
+  z;
 
   useEffect(() => {
     const { Engine, Render, Runner, Bodies, World, Events } = Matter;

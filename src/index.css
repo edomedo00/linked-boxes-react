@@ -219,7 +219,14 @@ input[type="range"]::-webkit-slider-thumb {
 
 .canvas-container {
   display: grid;
-  grid-template-rows: auto min-content;
+  grid-template-rows: 1fr min-content;
+  min-height: 0;
+}
+
+.canvas-wrapper {
+  min-height: 0;
+  overflow: hidden;
+  margin-bottom: 3rem;
 }
 
 .canvas {
@@ -227,7 +234,6 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .box-controls {
-  padding-top: 3rem;
   justify-self: center;
   display: flex;
   gap: 1.5rem;
@@ -311,11 +317,14 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 /* 
+
+// se debe autoseleccionar la ultima caja creada??
+
 sliders and the paddings from them, they are not margin right
 
 download image text is not vertically centered
 
-the gap in the box controls goes to 2rem when selected and 1 rem when add a box
+the gap in the box controls goes to 2rem when selected and 1.5 rem when add a box
 
 el texto del nombre del color se pierde con el color de la fuente
 */

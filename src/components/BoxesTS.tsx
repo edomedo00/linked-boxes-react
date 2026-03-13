@@ -14,6 +14,7 @@ let hovered: Array<{
   corners: Array<{ x: number; y: number; i: number }>;
   body?: Matter.Body;
 }> = [];
+
 const gridBoxes: Array<{
   x: number;
   y: number;
@@ -23,6 +24,7 @@ const gridBoxes: Array<{
   corners: Array<{ x: number; y: number; i: number }>;
   body?: Matter.Body;
 }> = [];
+
 let firstBox: {
   x: number;
   y: number;
@@ -32,6 +34,7 @@ let firstBox: {
   corners: Array<{ x: number; y: number; i: number }>;
   body?: Matter.Body;
 } | null = null;
+
 let secondBox: {
   x: number;
   y: number;
@@ -41,6 +44,7 @@ let secondBox: {
   corners: Array<{ x: number; y: number; i: number }>;
   body?: Matter.Body;
 } | null = null;
+
 let lastSecondBox: {
   x: number;
   y: number;
@@ -50,6 +54,7 @@ let lastSecondBox: {
   corners: Array<{ x: number; y: number; i: number }>;
   body?: Matter.Body;
 } | null = null;
+
 type BoxType = {
   x: number;
   y: number;
@@ -72,6 +77,7 @@ const boxFigures: Array<{
   align: string;
   eyelets: EyeletType[];
 }> = [];
+
 const eyeletFigures: Array<{
   id: number;
   figureId: number;
@@ -81,6 +87,7 @@ const eyeletFigures: Array<{
   radius: number;
   free: boolean;
 }> = [];
+
 let firstEyelet: {
   id: number;
   figureId: number;
@@ -90,6 +97,7 @@ let firstEyelet: {
   radius: number;
   free: boolean;
 } | null = null;
+
 let secondEyelet: {
   id: number;
   figureId: number;
@@ -99,6 +107,7 @@ let secondEyelet: {
   radius: number;
   free: boolean;
 } | null = null;
+
 type EyeletType = {
   id: number;
   figureId: number;
@@ -116,6 +125,7 @@ const ropeFigures: Array<{
   links: Matter.Body[];
   constraints: Matter.Constraint[];
 }> = [];
+
 let tempRope: {
   id: number;
   startEyelet: EyeletType;
@@ -123,6 +133,7 @@ let tempRope: {
   links: Matter.Body[];
   constraints: Matter.Constraint[];
 } | null = null;
+
 let activeBoxFigure: {
   id: number;
   start: { box: BoxType };
@@ -143,7 +154,7 @@ let nextRopeId = 0;
 const W = Math.min(window.innerWidth - 40, 800);
 const H = Math.min(window.innerHeight - 120, 560);
 
-const canvas = document.getElementById("canvas");
+const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 canvas.width = W;
 canvas.height = H;
 
@@ -161,7 +172,7 @@ Render.run(render);
 const runner = Runner.create();
 Runner.run(runner, engine);
 
-const HANDLE_D = 20;
+// const HANDLE_D = 20;
 const HANDLE_EYELET = 10;
 const GAP = 10; // px
 const EYELET_RADIUS = 6;
@@ -186,13 +197,10 @@ const EYELET_OFFSETS = {
 const boxW = Math.floor((gridW - GAP * (COLS - 1)) / COLS);
 const boxH = Math.floor((gridH - GAP * (ROWS - 1)) / ROWS);
 
-const actualGridW = boxW * COLS + GAP * (COLS - 1);
-const actualGridH = boxH * ROWS + GAP * (ROWS - 1);
-
 const ox = Math.floor((W - gridW) / 2);
 const oy = Math.floor((H - gridH) / 2);
 
-let links = [];
+// const links = [];
 
 for (let r = 0; r < ROWS; r++) {
   for (let c = 0; c < COLS; c++) {
@@ -229,16 +237,16 @@ gridBoxes.forEach((box) => {
   Composite.add(world, body);
 });
 
-function canvasPos(e) {
+function canvasPos(e: MouseEvent | TouchEvent) {
   const r = canvas.getBoundingClientRect();
-  const src = e.touches ? e.touches[0] : e;
+  const src = "touches" in e ? e.touches[0] : e;
   return {
     x: src.clientX - r.left,
     y: src.clientY - r.top,
   };
 }
 
-function selectBoxFigure(pos) {
+function selectBoxFigure(pos: { x: number; y: number }) {
   const eyelet = selectEyelet();
 
   const selected = boxFigures.find((fig) => {
@@ -251,7 +259,7 @@ function selectBoxFigure(pos) {
   return selected ?? null;
 }
 
-function selectBox(pos) {
+function selectBox(pos: { x: number; y: number }) {
   return (
     gridBoxes.find((box) => {
       const xs = box.corners.map((c) => c.x);
@@ -273,12 +281,13 @@ function selectBox(pos) {
 }
 
 function selectEyelet() {
+  if (!mousePos) return null;
   return (
     eyeletFigures.find((eye) => {
       return (
         Math.hypot(
-          mousePos.x - eye.body.position.x,
-          mousePos.y - eye.body.position.y,
+          mousePos!.x - eye.body.position.x,
+          mousePos!.y - eye.body.position.y,
         ) <
         EYELET_RADIUS + HANDLE_EYELET
       );
@@ -286,20 +295,7 @@ function selectEyelet() {
   );
 }
 
-function nearestCorner(pos, box) {
-  const closest = box.corners.reduce((nearest, corner) => {
-    return Math.hypot(pos.x - corner.x, pos.y - corner.y) <
-      Math.hypot(pos.x - nearest.x, pos.y - nearest.y)
-      ? corner
-      : nearest;
-  }, box.corners[0]);
-
-  return Math.hypot(pos.x - closest.x, pos.y - closest.y) < HANDLE_D
-    ? closest
-    : null;
-}
-
-function onDown(e) {
+function onDown(e: MouseEvent | TouchEvent) {
   const pos = canvasPos(e);
   const eyelet = selectEyelet();
   const clickedFig = selectBoxFigure(pos);
@@ -318,7 +314,7 @@ function onDown(e) {
   }
 }
 
-function onUp(e) {
+function onUp() {
   if (firstBox && secondBox) {
     createBoxFigure();
     activeBoxFigure = boxFigures[boxFigures.length - 1]; // set active by default
@@ -326,9 +322,10 @@ function onUp(e) {
 
   if (tempRope) {
     if (
+      firstEyelet &&
       secondEyelet &&
       secondEyelet !== firstEyelet &&
-      secondEyelet.figureId !== firstEyelet.figureId
+      secondEyelet.figureId !== firstEyelet?.figureId
     ) {
       Body.setPosition(tempRope.links[SEGMENTS - 1], {
         x: secondEyelet.body.position.x,
@@ -354,7 +351,7 @@ function onUp(e) {
   hovered = [];
 }
 
-function onMove(e) {
+function onMove(e: MouseEvent | TouchEvent) {
   mousePos = canvasPos(e);
 
   secondBox = selectBox(mousePos) ?? lastSecondBox;
@@ -378,7 +375,7 @@ function onMove(e) {
   }
 }
 
-function onKeydown(e) {
+function onKeydown(e: KeyboardEvent) {
   switch (e.code) {
     case "KeyD":
       deleteBoxFigure();
@@ -393,7 +390,10 @@ function onKeydown(e) {
 }
 
 function hoveredBoxes() {
-  const { minCol, maxCol, minRow, maxRow } = absBoxesCoor();
+  const coor = absBoxesCoor();
+  if (!coor) return [];
+
+  const { minCol, maxCol, minRow, maxRow } = coor;
 
   const hovered = gridBoxes.filter(
     (box) =>
@@ -407,8 +407,10 @@ function hoveredBoxes() {
 }
 
 function createRopeFigure() {
+  if (!firstEyelet) return;
+
   tempRope = {
-    id: nextRopeId,
+    id: nextRopeId++,
     startEyelet: firstEyelet,
     endEyelet: null,
     links: [],
@@ -417,10 +419,10 @@ function createRopeFigure() {
 
   const start = firstEyelet.body.position;
 
-  const dist = Math.hypot(mousePos.x - start.x, mousePos.y - start.y);
+  // const dist = Math.hypot(mousePos.x - start.x, mousePos.y - start.y);
 
-  const totalLength = Math.max(dist * 10, SEGMENTS * 1);
-  const segLen = totalLength / SEGMENTS;
+  // const totalLength = Math.max(dist * 10, SEGMENTS * 1);
+  // const segLen = totalLength / SEGMENTS;
 
   for (let i = 0; i < SEGMENTS; i++) {
     const isEnd = i === 0 || i === SEGMENTS - 1;
@@ -451,6 +453,8 @@ function createRopeFigure() {
 }
 
 function absBoxesCoor(fBox = firstBox, sBox = secondBox) {
+  if (!fBox || !sBox) return;
+
   const firstBoxCoor = { col: fBox.col, row: fBox.row };
   const secondBoxCoor = { col: sBox.col, row: sBox.row };
 
@@ -463,7 +467,10 @@ function absBoxesCoor(fBox = firstBox, sBox = secondBox) {
 }
 
 function createBoxFigure() {
-  const { minCol, maxCol, minRow, maxRow } = absBoxesCoor();
+  const coor = absBoxesCoor();
+  if (!coor || !firstBox || !secondBox) return;
+
+  const { minCol, maxCol, minRow, maxRow } = coor;
 
   const unavailableGridBox = gridBoxes.some(
     (box) =>
@@ -479,34 +486,40 @@ function createBoxFigure() {
   const eyelets = [
     createBoxEyelet(
       gridBoxes
-        .find((box) => box.col === minCol && box.row === minRow)
-        .corners.find((c) => c.i === 1),
+        .find((box) => box.col === minCol && box.row === minRow)!
+        .corners.find((c) => c.i === 1)!,
       nextFigureId,
     ),
     createBoxEyelet(
       gridBoxes
-        .find((box) => box.col === maxCol && box.row === minRow)
-        .corners.find((c) => c.i === 2),
+        .find((box) => box.col === maxCol && box.row === minRow)!
+        .corners.find((c) => c.i === 2)!,
       nextFigureId,
     ),
     createBoxEyelet(
       gridBoxes
-        .find((box) => box.col === minCol && box.row === maxRow)
-        .corners.find((c) => c.i === 3),
+        .find((box) => box.col === minCol && box.row === maxRow)!
+        .corners.find((c) => c.i === 3)!,
       nextFigureId,
     ),
     createBoxEyelet(
       gridBoxes
-        .find((box) => box.col === maxCol && box.row === maxRow)
-        .corners.find((c) => c.i === 4),
+        .find((box) => box.col === maxCol && box.row === maxRow)!
+        .corners.find((c) => c.i === 4)!,
       nextFigureId,
     ),
   ];
 
   eyeletFigures.push(...eyelets);
 
-  let boxTL = gridBoxes.find((box) => box.col === minCol && box.row === minRow);
-  let boxBR = gridBoxes.find((box) => box.col === maxCol && box.row === maxRow);
+  const boxTL = gridBoxes.find(
+    (box) => box.col === minCol && box.row === minRow,
+  );
+  const boxBR = gridBoxes.find(
+    (box) => box.col === maxCol && box.row === maxRow,
+  );
+
+  if (!boxTL || !boxBR || !boxTL.corners[0] || !boxBR.corners[3]) return;
 
   const boxFig = {
     id: nextFigureId++,
@@ -539,7 +552,9 @@ function deleteBoxFigure() {
 
   deleteBoxRopes();
 
-  Composite.remove(world, activeBoxFigure.body);
+  if (activeBoxFigure.body) {
+    Composite.remove(world, activeBoxFigure.body);
+  }
 
   for (let i = eyeletFigures.length - 1; i >= 0; i--) {
     const eyelet = eyeletFigures[i];
@@ -550,26 +565,27 @@ function deleteBoxFigure() {
     }
   }
 
-  const { minCol, maxCol, minRow, maxRow } = absBoxesCoor(
-    activeBoxFigure.start.box,
-    activeBoxFigure.end.box,
-  );
+  const coor = absBoxesCoor(activeBoxFigure.start.box, activeBoxFigure.end.box);
 
-  gridBoxes.forEach((box) => {
-    if (
-      box.col >= minCol &&
-      box.col <= maxCol &&
-      box.row >= minRow &&
-      box.row <= maxRow
-    ) {
-      box.free = true;
-    }
-  });
+  if (coor) {
+    const { minCol, maxCol, minRow, maxRow } = coor;
 
-  const index = boxFigures.findIndex((f) => f.id === activeBoxFigure.id);
+    gridBoxes.forEach((box) => {
+      if (
+        box.col >= minCol &&
+        box.col <= maxCol &&
+        box.row >= minRow &&
+        box.row <= maxRow
+      ) {
+        box.free = true;
+      }
+    });
+  }
+
+  const index = boxFigures.findIndex((f) => f.id === activeBoxFigure?.id);
   if (index !== -1) boxFigures.splice(index, 1);
 
-  boxFigures.splice();
+  // boxFigures.splice();
 
   activeBoxFigure = null;
 }
@@ -581,13 +597,13 @@ function deleteBoxRopes() {
 
       if (
         rope.startEyelet.figureId === activeBoxFigure.id ||
-        rope.endEyelet.figureId === activeBoxFigure.id
+        (rope.endEyelet && rope.endEyelet.figureId === activeBoxFigure.id)
       ) {
         rope.links.forEach((link) => Composite.remove(world, link));
         rope.constraints.forEach((c) => Composite.remove(world, c));
 
         rope.startEyelet.free = true;
-        rope.endEyelet.free = true;
+        if (rope.endEyelet) rope.endEyelet.free = true;
 
         ropeFigures.splice(i, 1);
       }
@@ -643,8 +659,11 @@ function syncBoxFigureBody() {
   syncEyelets();
 }
 
-function createBoxEyelet(corner, figureId) {
-  const offset = EYELET_OFFSETS[corner.i];
+function createBoxEyelet(
+  corner: { x: number; y: number; i: number },
+  figureId: number,
+) {
+  const offset = EYELET_OFFSETS[corner.i as keyof typeof EYELET_OFFSETS];
 
   const body = Bodies.circle(
     corner.x + offset.x,
@@ -693,14 +712,16 @@ function syncRopeFigures() {
       x: rope.startEyelet.body.position.x,
       y: rope.startEyelet.body.position.y,
     });
-    Body.setPosition(rope.links[SEGMENTS - 1], {
-      x: rope.endEyelet.body.position.x,
-      y: rope.endEyelet.body.position.y,
-    });
+    if (rope.endEyelet) {
+      Body.setPosition(rope.links[SEGMENTS - 1], {
+        x: rope.endEyelet.body.position.x,
+        y: rope.endEyelet.body.position.y,
+      });
+    }
   }
 }
 
-function syncGridBoxColors(hovered = []) {
+function syncGridBoxColors(hovered: BoxType[] = []) {
   const hoveredSet = new Set(hovered.map(({ row, col }) => `${row},${col}`));
 
   for (const box of gridBoxes) {
@@ -714,16 +735,8 @@ function syncGridBoxColors(hovered = []) {
   }
 }
 
-function drawCircle(x, y, color) {
-  const ctx = render.context;
-  ctx.beginPath();
-  ctx.arc(x, y, 5, 0, Math.PI * 2);
-  ctx.fillStyle = color;
-  ctx.fill();
-}
-
-function drawDraggingRope(ctx) {
-  if (tempRope.links.length === 0) return;
+function drawDraggingRope(ctx: CanvasRenderingContext2D) {
+  if (!tempRope || tempRope.links.length === 0) return;
 
   ctx.save();
 
@@ -762,7 +775,7 @@ function drawDraggingRope(ctx) {
   ctx.restore();
 }
 
-function drawRopeFigures(ctx) {
+function drawRopeFigures(ctx: CanvasRenderingContext2D) {
   for (const rope of ropeFigures) {
     ctx.save();
 
@@ -798,7 +811,13 @@ function drawRopeFigures(ctx) {
   }
 }
 
-function updateRopeSlack(rope) {
+function updateRopeSlack(rope: {
+  id: number;
+  startEyelet: EyeletType;
+  endEyelet: EyeletType | null;
+  links: Matter.Body[];
+  constraints: Matter.Constraint[];
+}) {
   const a = rope.links[0].position;
   const b = rope.links[SEGMENTS - 1].position;
   const dist = Math.hypot(b.x - a.x, b.y - a.y);
@@ -808,7 +827,7 @@ function updateRopeSlack(rope) {
   }
 }
 
-function drawactiveBoxFigure(ctx) {
+function drawactiveBoxFigure(ctx: CanvasRenderingContext2D) {
   if (!activeBoxFigure) return;
 
   const { TL, BR } = activeBoxFigure.absCoor;
@@ -847,5 +866,3 @@ Events.on(render, "afterRender", () => {
 
   ctx.beginPath();
 });
-
-// se debe autoseleccionar la ultima caja creada

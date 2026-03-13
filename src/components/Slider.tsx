@@ -1,4 +1,20 @@
-export default function Slider({ value, onChange, children }) {
+type SliderProps = {
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+  step?: number;
+  children?: React.ReactNode;
+};
+
+export default function Slider({
+  value,
+  onChange,
+  min,
+  max,
+  step = 1,
+  children,
+}: SliderProps) {
   return (
     <div className=" controls-slider">
       {children}
@@ -11,9 +27,10 @@ export default function Slider({ value, onChange, children }) {
         />
         <input
           type="range"
-          min={0}
-          max={100}
+          min={min}
+          max={max}
           value={value}
+          step={step}
           onChange={(e) => onChange(Number(e.target.value))}
         />
       </div>

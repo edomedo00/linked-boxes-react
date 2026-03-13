@@ -1,4 +1,4 @@
-import MatterSketch from "./components/MatterSketch";
+import Boxes from "./components/Boxes";
 import Slider from "./components/Slider";
 import ConnectionIcon from "./assets/connection.svg";
 import DisconnectIcon from "./assets/disconnect.svg";
@@ -18,11 +18,12 @@ const colors = [
 function App() {
   const [selectedColor, setSelectedColor] = useState("#E6E6E6");
   const [sliders, setSliders] = useState({
-    prop1: 50,
-    prop2: 50,
+    rope_stiffness: 1,
+    rope_thickness: 50,
     prop3: 50,
-    prop4: 50,
-    prop5: 50,
+    cols: 11,
+    rows: 11,
+    gap: 10,
   });
   const [activeButton, setActiveButton] = useState("connect");
 
@@ -44,13 +45,6 @@ function App() {
             </p>
           </div>
           <div className="color-selector">
-            {/* <div
-              className="color selected-color"
-              style={{ backgroundColor: "#E6E6E6" }}
-            ></div>
-            <div className="color" style={{ backgroundColor: "#83868B" }}></div>
-            <div className="color" style={{ backgroundColor: "#181818" }}></div>
-            <div className="color" style={{ backgroundColor: "#10E41A" }}></div> */}
             {colors.map((c) => (
               <button
                 key={c.hex}
@@ -67,32 +61,41 @@ function App() {
         </div>
         <div className="controls-ropes">
           <Slider
-            value={sliders.prop1}
-            onChange={(val: number) => setSliders({ ...sliders, prop1: val })}
+            value={sliders.rope_stiffness}
+            min={0.5}
+            max={1.5}
+            step={0.1}
+            onChange={(val: number) =>
+              setSliders({ ...sliders, rope_stiffness: val })
+            }
           >
-            <p>property 1</p>
-          </Slider>
-
-          <Slider
-            value={sliders.prop2}
-            onChange={(val: number) => setSliders({ ...sliders, prop2: val })}
-          >
-            <p>property 2</p>
-          </Slider>
-
-          <Slider
-            value={sliders.prop3}
-            onChange={(val: number) => setSliders({ ...sliders, prop3: val })}
-          >
-            <p>property 3</p>
+            <p>rope sitffness</p>
           </Slider>
         </div>
         <div className="controls-boxes">
           <Slider
-            value={sliders.prop4}
-            onChange={(val: number) => setSliders({ ...sliders, prop4: val })}
+            value={sliders.cols}
+            min={5}
+            max={15}
+            onChange={(val: number) => setSliders({ ...sliders, cols: val })}
           >
-            <p>property 4</p>
+            <p>columns</p>
+          </Slider>
+          <Slider
+            value={sliders.rows}
+            min={5}
+            max={15}
+            onChange={(val: number) => setSliders({ ...sliders, rows: val })}
+          >
+            <p>rows</p>
+          </Slider>
+          <Slider
+            value={sliders.gap}
+            min={5}
+            max={25}
+            onChange={(val: number) => setSliders({ ...sliders, gap: val })}
+          >
+            <p>gap</p>
           </Slider>
         </div>
         <div className="controls-download">
@@ -103,8 +106,8 @@ function App() {
         </div>
       </div>
       <div className="canvas-container">
-        <div className="canvas">
-          <h1>CANVAS</h1>
+        <div className="canvas-wrapper">
+          <Boxes />
         </div>
         <div className="box-controls">
           {/* <p>add a box</p> */}
