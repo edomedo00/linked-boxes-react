@@ -15,15 +15,17 @@ export default function Slider({
   step = 1,
   children,
 }: SliderProps) {
+  const pct = ((value - min) / (max - min)) * 100;
+
   return (
     <div className=" controls-slider">
       {children}
       <div className="custom-slider">
-        <div className="slider-track-left" style={{ width: `${value}%` }} />
+        <div className="slider-track-left" style={{ width: `${pct}%` }} />
         <div className="slider-thumb" />
         <div
           className="slider-track-right"
-          style={{ width: `${100 - value}%` }}
+          style={{ width: `${100 - pct}%` }}
         />
         <input
           type="range"

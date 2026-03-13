@@ -18,8 +18,8 @@ const colors = [
 function App() {
   const [selectedColor, setSelectedColor] = useState("#E6E6E6");
   const [sliders, setSliders] = useState({
-    rope_stiffness: 1,
-    rope_thickness: 50,
+    ropeStiffness: 1,
+    ropeThickness: 4,
     prop3: 50,
     cols: 11,
     rows: 11,
@@ -61,15 +61,25 @@ function App() {
         </div>
         <div className="controls-ropes">
           <Slider
-            value={sliders.rope_stiffness}
+            value={sliders.ropeStiffness}
             min={0.5}
             max={1.5}
             step={0.1}
             onChange={(val: number) =>
-              setSliders({ ...sliders, rope_stiffness: val })
+              setSliders({ ...sliders, ropeStiffness: val })
             }
           >
-            <p>rope sitffness</p>
+            <p>rope stiffness</p>
+          </Slider>
+          <Slider
+            value={sliders.ropeThickness}
+            min={1}
+            max={10}
+            onChange={(val: number) =>
+              setSliders({ ...sliders, ropeThickness: val })
+            }
+          >
+            <p>rope thickness</p>
           </Slider>
         </div>
         <div className="controls-boxes">
@@ -107,7 +117,14 @@ function App() {
       </div>
       <div className="canvas-container">
         <div className="canvas-wrapper">
-          <Boxes />
+          <Boxes
+            ropeStiffness={sliders.ropeStiffness}
+            ropeThickness={sliders.ropeThickness}
+            prop3={sliders.prop3}
+            cols={sliders.cols}
+            rows={sliders.rows}
+            gap={sliders.gap}
+          />
         </div>
         <div className="box-controls">
           {/* <p>add a box</p> */}

@@ -11,7 +11,7 @@ const SEGMENTS = 28;
 const SEG_LEN = 13;
 const LINK_R = 3.5;
 const SLACK = 1.3;
-const ROPE_THICKNESS = 4;
+// const ROPE_THICKNESS = 4;
 
 const EYELET_OFFSETS = {
   1: { x: EYELET_PADDING, y: EYELET_PADDING }, // TL
@@ -20,10 +20,13 @@ const EYELET_OFFSETS = {
   4: { x: -EYELET_PADDING, y: -EYELET_PADDING }, // BR
 };
 
-export default function PhysicsCanvas() {
+export default function PhysicsCanvas({ ropeThickness }) {
   const canvasRef = useRef(null);
+  const ropeThicknessRef = useRef(ropeThickness);
 
   useEffect(() => {
+    ropeThicknessRef.current = ropeThickness;
+
     const {
       Engine,
       Render,
@@ -80,8 +83,9 @@ export default function PhysicsCanvas() {
     Runner.run(runner, engine);
 
     // --- Grid ---
-    const gridW = W * 1;
-    const gridH = H * 1;
+    const MARGIN = 1;
+    const gridW = W - MARGIN * 2;
+    const gridH = H - MARGIN * 2;
     const boxW = Math.floor((gridW - GAP * (COLS - 1)) / COLS);
     const boxH = Math.floor((gridH - GAP * (ROWS - 1)) / ROWS);
     const ox = Math.floor((W - gridW) / 2);
@@ -459,7 +463,7 @@ export default function PhysicsCanvas() {
         links[SEGMENTS - 1].position.y,
       );
       ctx.strokeStyle = strokeStyle;
-      ctx.lineWidth = ROPE_THICKNESS;
+      ctx.lineWidth = ropeThicknessRef.current;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
       ctx.stroke();
@@ -615,7 +619,7 @@ export default function PhysicsCanvas() {
       Runner.stop(runner);
       Engine.clear(engine);
     };
-  }, []);
+  }, [ropeThickness]);
 
   return <canvas ref={canvasRef} />;
 }
