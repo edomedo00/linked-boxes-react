@@ -6,7 +6,7 @@ import DeleteIcon from "./assets/delete.svg";
 import TextIcon from "./assets/text.svg";
 import TextLeftIcon from "./assets/text-left.svg";
 import TextCenterIcon from "./assets/text-center.svg";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 const colors = [
   { hex: "#E6E6E6", name: "gray" },
@@ -25,6 +25,15 @@ function App() {
     rows: 11,
     gap: 10,
   });
+
+  // const activeRef = useRef({ id: null, mode: "" });
+  const [active, setActive] = useState({
+    id: null,
+    mode: "",
+  });
+
+  const handleSetActive = useCallback((val) => setActive(val), []);
+
   const [activeButton, setActiveButton] = useState("connect");
 
   return (
@@ -107,6 +116,9 @@ function App() {
           >
             <p>gap</p>
           </Slider>
+          <div className="">
+            {active.id} {active.mode}
+          </div>
         </div>
         <div className="controls-download">
           <button className="btn btn-download">
@@ -120,12 +132,13 @@ function App() {
           <Boxes
             ropeStiffness={sliders.ropeStiffness}
             ropeThickness={sliders.ropeThickness}
-            prop3={sliders.prop3}
             cols={sliders.cols}
             rows={sliders.rows}
             gap={sliders.gap}
+            setActive={handleSetActive}
           />
         </div>
+
         <div className="box-controls">
           {/* <p>add a box</p> */}
           <p>box 1</p>
@@ -202,6 +215,17 @@ function App() {
         </div>
       </div>
     </main>
+  );
+}
+
+function AdtiveDisplay({ activeRef }) {
+  const [display, setDisplay] = useState({ id: null, mode: "" });
+
+  return (
+    <div>
+      {display.id}
+      {display.mode}
+    </div>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 import Matter from "matter-js";
 
 const HANDLE_EYELET = 10;
@@ -10,7 +10,7 @@ const COLS = 11;
 const SEGMENTS = 28;
 const SEG_LEN = 13;
 const LINK_R = 3.5;
-const SLACK = 1.3;
+// const SLACK = 1.3;
 // const ROPE_THICKNESS = 4;
 
 const EYELET_OFFSETS = {
@@ -20,12 +20,32 @@ const EYELET_OFFSETS = {
   4: { x: -EYELET_PADDING, y: -EYELET_PADDING }, // BR
 };
 
-export default function PhysicsCanvas({ ropeThickness }) {
+export default function PhysicsCanvas({
+  ropeThickness,
+  ropeStiffness,
+  cols,
+  rows,
+  gap,
+  setActive,
+}) {
   const canvasRef = useRef(null);
   const ropeThicknessRef = useRef(ropeThickness);
+  const ropeStiffnessRef = useRef(ropeStiffness);
+  const colsRef = useRef(cols);
+  const rowsRef = useRef(rows);
+  const gapRef = useRef(gap);
+  const setActiveRef = useRef(setActive);
+
+  useEffect(() => {
+    setActiveRef.current = setActive;
+  }, [setActive]);
 
   useEffect(() => {
     ropeThicknessRef.current = ropeThickness;
+    ropeStiffnessRef.current = ropeStiffness;
+    colsRef.current = cols;
+    rowsRef.current = rows;
+    gapRef.current = gap;
 
     const {
       Engine,
@@ -140,6 +160,7 @@ export default function PhysicsCanvas({ ropeThickness }) {
           pos.x >= TL.x && pos.x <= BR.x && pos.y >= TL.y && pos.y <= BR.y,
       );
       if (eyelet && eyelet.figureId === activeBoxFigure?.id) return 1;
+      console.log(selected);
       return selected ?? null;
     }
 
@@ -192,6 +213,14 @@ export default function PhysicsCanvas({ ropeThickness }) {
       );
     }
 
+    function setActiveBoxReference() {
+      setActiveRef.current(
+        activeBoxFigure
+          ? { id: activeBoxFigure.id, mode: "active" }
+          : { id: null, mode: "" },
+      );
+    }
+
     // --- Rope ---
     function createRopeFigure() {
       tempRope = {
@@ -235,7 +264,7 @@ export default function PhysicsCanvas({ ropeThickness }) {
       const a = rope.links[0].position;
       const b = rope.links[SEGMENTS - 1].position;
       const dist = Math.hypot(b.x - a.x, b.y - a.y);
-      const segLen = (dist * SLACK) / (SEGMENTS - 1);
+      const segLen = (dist * ropeStiffnessRef.current) / (SEGMENTS - 1);
       for (const c of rope.constraints) c.length = segLen;
     }
 
@@ -404,6 +433,7 @@ export default function PhysicsCanvas({ ropeThickness }) {
       const idx = boxFigures.findIndex((f) => f.id === activeBoxFigure.id);
       if (idx !== -1) boxFigures.splice(idx, 1);
       activeBoxFigure = null;
+      setActiveBoxReference();
     }
 
     function deleteBoxRopes() {
@@ -516,12 +546,14 @@ export default function PhysicsCanvas({ ropeThickness }) {
       if (clickedFig === 1) return;
       activeBoxFigure =
         clickedFig?.id === activeBoxFigure?.id ? null : clickedFig;
+      setActiveBoxReference();
     }
 
     function onUp() {
       if (firstBox && secondBox) {
         createBoxFigure();
         activeBoxFigure = boxFigures[boxFigures.length - 1];
+        setActiveBoxReference();
       }
 
       if (tempRope) {
@@ -587,6 +619,8 @@ export default function PhysicsCanvas({ ropeThickness }) {
       syncBoxFigureBody();
       syncRopeFigures();
       if (tempRope) updateRopeSlack(tempRope);
+      ropeFigures.forEach(updateRopeSlack);
+
       drawActiveBoxFigure(ctx);
       drawRopeFigures(ctx);
       if (firstEyelet) drawDraggingRope(ctx);
@@ -619,7 +653,12 @@ export default function PhysicsCanvas({ ropeThickness }) {
       Runner.stop(runner);
       Engine.clear(engine);
     };
-  }, [ropeThickness]);
+  }, [cols, rows, cols, gap]);
+
+  useEffect(() => {
+    ropeThicknessRef.current = ropeThickness;
+    ropeStiffnessRef.current = ropeStiffness;
+  }, [ropeThickness, ropeStiffness]);
 
   return <canvas ref={canvasRef} />;
 }
