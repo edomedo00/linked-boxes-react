@@ -20,8 +20,8 @@ function App() {
   const [sliders, setSliders] = useState({
     ropeStiffness: 1,
     ropeThickness: 4,
-    eyeletSize: 11,
-    eyeletPading: 11,
+    eyeletRadius: 8,
+    eyeletPadding: 7,
     gap: 10,
   });
 
@@ -98,26 +98,29 @@ function App() {
             value={sliders.gap}
             min={5}
             max={25}
+            step={1}
             onChange={(val: number) => setSliders({ ...sliders, gap: val })}
           >
             <p>gap</p>
           </Slider>
           <Slider
-            value={sliders.eyeletSize}
-            min={5}
+            value={sliders.eyeletRadius}
+            min={2}
             max={15}
+            step={0.5}
             onChange={(val: number) =>
-              setSliders({ ...sliders, eyeletSize: val })
+              setSliders({ ...sliders, eyeletRadius: val })
             }
           >
             <p>eyelet size</p>
           </Slider>
           <Slider
-            value={sliders.eyeletPading}
-            min={5}
-            max={15}
+            value={sliders.eyeletPadding}
+            min={2}
+            max={20}
+            step={0.5}
             onChange={(val: number) =>
-              setSliders({ ...sliders, eyeletPading: val })
+              setSliders({ ...sliders, eyeletPadding: val })
             }
           >
             <p>eyelet padding</p>
@@ -139,8 +142,8 @@ function App() {
           <Boxes
             ropeStiffness={sliders.ropeStiffness}
             ropeThickness={sliders.ropeThickness}
-            cols={sliders.cols}
-            rows={sliders.rows}
+            eyeletRadius={sliders.eyeletRadius}
+            eyeletPadding={sliders.eyeletPadding}
             gap={sliders.gap}
             setActive={handleSetActive}
           />

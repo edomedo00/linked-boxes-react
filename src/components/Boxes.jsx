@@ -3,8 +3,7 @@ import Matter from "matter-js";
 
 const HANDLE_EYELET = 10;
 const GAP = 10;
-const EYELET_RADIUS = 10;
-const EYELET_PADDING = 10;
+
 const ROWS = 11;
 const COLS = 11;
 const SEGMENTS = 28;
@@ -13,45 +12,43 @@ const LINK_R = 3.5;
 // const SLACK = 1.3;
 // const ROPE_THICKNESS = 4;
 
-const EYELET_OFFSETS = {
-  1: { x: EYELET_PADDING + EYELET_RADIUS, y: EYELET_PADDING + EYELET_RADIUS }, // TL
-  2: { x: -EYELET_PADDING - EYELET_RADIUS, y: EYELET_PADDING + EYELET_RADIUS }, // TR
-  3: { x: EYELET_PADDING + EYELET_RADIUS, y: -EYELET_PADDING - EYELET_RADIUS }, // BL
-  4: { x: -EYELET_PADDING - EYELET_RADIUS, y: -EYELET_PADDING - EYELET_RADIUS }, // BR
-};
-
 export default function PhysicsCanvas({
   ropeThickness,
   ropeStiffness,
   gap,
-  eyeletSize,
+  eyeletRadius,
   eyeletPadding,
   setActive,
 }) {
   const canvasRef = useRef(null);
   const ropeThicknessRef = useRef(ropeThickness);
   const ropeStiffnessRef = useRef(ropeStiffness);
-  const eyeletSizeRef = useRef(eyeletSize);
+  const eyeletRadiusRef = useRef(eyeletRadius);
   const eyeletPaddingRef = useRef(eyeletPadding);
   const gapRef = useRef(gap);
   const setActiveRef = useRef(setActive);
-
-  useEffect(() => {
-    ropeThicknessRef.current = ropeThickness;
-    ropeStiffnessRef.current = ropeStiffness;
-  });
 
   useEffect(() => {
     setActiveRef.current = setActive;
   }, [setActive]);
 
   useEffect(() => {
-    ropeThicknessRef.current = ropeThickness;
-    ropeStiffnessRef.current = ropeStiffness;
-    eyeletSizeRef.current = eyeletSize;
-    eyeletPaddingRef.current = eyeletPadding;
     gapRef.current = gap;
+  }, [gap]);
 
+  useEffect(() => {
+    ropeStiffnessRef.current = ropeStiffness;
+    ropeThicknessRef.current = ropeThickness;
+  }, [ropeStiffness, ropeThickness]);
+
+  useEffect(() => {
+    eyeletRadiusRef.current = eyeletRadius;
+    eyeletPaddingRef.current = eyeletPadding;
+  }, [eyeletRadius, eyeletPadding]);
+
+  const appliedGapRef = useRef(gap);
+
+  useEffect(() => {
     const {
       Engine,
       Render,
@@ -165,7 +162,7 @@ export default function PhysicsCanvas({
           pos.x >= TL.x && pos.x <= BR.x && pos.y >= TL.y && pos.y <= BR.y,
       );
       if (eyelet && eyelet.figureId === activeBoxFigure?.id) return 1;
-      console.log(selected);
+
       return selected ?? null;
     }
 
@@ -193,7 +190,7 @@ export default function PhysicsCanvas({
               mousePos.x - eye.body.position.x,
               mousePos.y - eye.body.position.y,
             ) <
-            EYELET_RADIUS + HANDLE_EYELET,
+            eyeletRadiusRef.current + HANDLE_EYELET,
         ) ?? null
       );
     }
@@ -275,11 +272,22 @@ export default function PhysicsCanvas({
 
     // --- Eyelets ---
     function createBoxEyelet(corner, figureId) {
-      const offset = EYELET_OFFSETS[corner.i];
+      const radius = eyeletRadiusRef.current;
+      const padding = eyeletPaddingRef.current;
+
+      const offsets = {
+        1: { x: padding + radius, y: padding + radius },
+        2: { x: -padding - radius, y: padding + radius },
+        3: { x: padding + radius, y: -padding - radius },
+        4: { x: -padding - radius, y: -padding - radius },
+      };
+
+      const offset = offsets[corner.i];
+
       const body = Bodies.circle(
         corner.x + offset.x,
         corner.y + offset.y,
-        EYELET_RADIUS,
+        radius,
         {
           isStatic: true,
           label: "eyelet",
@@ -287,6 +295,7 @@ export default function PhysicsCanvas({
           collisionFilter: { mask: 0 },
         },
       );
+
       Composite.add(world, body);
       return {
         id: nextEyeletId++,
@@ -294,23 +303,44 @@ export default function PhysicsCanvas({
         corner,
         offset,
         body,
-        radius: EYELET_RADIUS,
+        radius: radius,
         free: true,
       };
     }
 
     function syncEyelets() {
+      const radius = eyeletRadiusRef.current;
+      const padding = eyeletPaddingRef.current;
+      const offsets = {
+        1: { x: padding + radius, y: padding + radius },
+        2: { x: -padding - radius, y: padding + radius },
+        3: { x: padding + radius, y: -padding - radius },
+        4: { x: -padding - radius, y: -padding - radius },
+      };
+
       for (const eyelet of eyeletFigures) {
-        Body.setPosition(eyelet.body, {
-          x: eyelet.corner.x + eyelet.offset.x,
-          y: eyelet.corner.y + eyelet.offset.y,
-        });
+        const newOffset = offsets[eyelet.corner.i];
+        eyelet.offset = newOffset;
+        Composite.remove(world, eyelet.body);
+        eyelet.body = Bodies.circle(
+          eyelet.corner.x + newOffset.x,
+          eyelet.corner.y + newOffset.y,
+          radius,
+          {
+            isStatic: true,
+            label: "eyelet",
+            render: { fillStyle: "#E6E6E6", strokeStyle: "none" },
+            collisionFilter: { mask: 0 },
+          },
+        );
+        Composite.add(world, eyelet.body);
       }
     }
 
     // --- Box figures ---
     function createBoxFigure() {
       const { minCol, maxCol, minRow, maxRow } = absBoxesCoor();
+
       const unavailable = gridBoxes.some(
         (box) =>
           box.col >= minCol &&
@@ -484,6 +514,49 @@ export default function PhysicsCanvas({
       }
     }
 
+    function syncGrid() {
+      const currentGap = gapRef.current;
+      if (currentGap === appliedGapRef.current) return;
+      appliedGapRef.current = currentGap;
+
+      const newBoxW = Math.floor((gridW - currentGap * (COLS - 1)) / COLS);
+      const newBoxH = Math.floor((gridH - currentGap * (ROWS - 1)) / ROWS);
+
+      for (const box of gridBoxes) {
+        const x = ox + box.col * (newBoxW + currentGap);
+        const y = oy + box.row * (newBoxH + currentGap);
+
+        box.x = x;
+        box.y = y;
+
+        box.corners[0].x = x;
+        box.corners[0].y = y;
+        box.corners[1].x = x + newBoxW;
+        box.corners[1].y = y;
+        box.corners[2].x = x;
+        box.corners[2].y = y + newBoxH;
+        box.corners[3].x = x + newBoxW;
+        box.corners[3].y = y + newBoxH;
+
+        Composite.remove(world, box.body);
+        box.body = Bodies.rectangle(
+          x + newBoxW / 2,
+          y + newBoxH / 2,
+          newBoxW,
+          newBoxH,
+          { isStatic: true, render: { fillStyle: "#b8babc33" } },
+        );
+        Composite.add(world, box.body);
+      }
+
+      for (const fig of boxFigures) {
+        if (fig.body) {
+          Composite.remove(world, fig.body);
+          fig.body = null;
+        }
+      }
+    }
+
     // --- Draw ---
     function drawRope(ctx, links, strokeStyle) {
       ctx.beginPath();
@@ -505,7 +578,13 @@ export default function PhysicsCanvas({
 
       for (const ep of [links[0], links[SEGMENTS - 1]]) {
         ctx.beginPath();
-        ctx.arc(ep.position.x, ep.position.y, EYELET_RADIUS, 0, Math.PI * 2);
+        ctx.arc(
+          ep.position.x,
+          ep.position.y,
+          eyeletRadiusRef.current,
+          0,
+          Math.PI * 2,
+        );
         ctx.fillStyle = strokeStyle;
         ctx.fill();
       }
@@ -620,6 +699,7 @@ export default function PhysicsCanvas({
 
     Events.on(render, "afterRender", () => {
       const ctx = render.context;
+      syncGrid();
       syncGridBoxColors();
       syncBoxFigureBody();
       syncRopeFigures();
@@ -640,7 +720,7 @@ export default function PhysicsCanvas({
       render.options.width = W;
       render.options.height = H;
       render.canvas.width = W;
-      render.canvas.heighr = H;
+      render.canvas.height = H;
     });
 
     observer.observe(container);
@@ -658,12 +738,7 @@ export default function PhysicsCanvas({
       Runner.stop(runner);
       Engine.clear(engine);
     };
-  }, [gap]);
-
-  useEffect(() => {
-    ropeThicknessRef.current = ropeThickness;
-    ropeStiffnessRef.current = ropeStiffness;
-  }, [ropeThickness, ropeStiffness]);
+  }, []);
 
   return <canvas ref={canvasRef} />;
 }
