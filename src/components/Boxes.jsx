@@ -3,7 +3,7 @@ import Matter from "matter-js";
 
 const HANDLE_EYELET = 10;
 const GAP = 10;
-const EYELET_RADIUS = 6;
+const EYELET_RADIUS = 10;
 const EYELET_PADDING = 10;
 const ROWS = 11;
 const COLS = 11;
@@ -14,27 +14,32 @@ const LINK_R = 3.5;
 // const ROPE_THICKNESS = 4;
 
 const EYELET_OFFSETS = {
-  1: { x: EYELET_PADDING, y: EYELET_PADDING }, // TL
-  2: { x: -EYELET_PADDING, y: EYELET_PADDING }, // TR
-  3: { x: EYELET_PADDING, y: -EYELET_PADDING }, // BL
-  4: { x: -EYELET_PADDING, y: -EYELET_PADDING }, // BR
+  1: { x: EYELET_PADDING + EYELET_RADIUS, y: EYELET_PADDING + EYELET_RADIUS }, // TL
+  2: { x: -EYELET_PADDING - EYELET_RADIUS, y: EYELET_PADDING + EYELET_RADIUS }, // TR
+  3: { x: EYELET_PADDING + EYELET_RADIUS, y: -EYELET_PADDING - EYELET_RADIUS }, // BL
+  4: { x: -EYELET_PADDING - EYELET_RADIUS, y: -EYELET_PADDING - EYELET_RADIUS }, // BR
 };
 
 export default function PhysicsCanvas({
   ropeThickness,
   ropeStiffness,
-  cols,
-  rows,
   gap,
+  eyeletSize,
+  eyeletPadding,
   setActive,
 }) {
   const canvasRef = useRef(null);
   const ropeThicknessRef = useRef(ropeThickness);
   const ropeStiffnessRef = useRef(ropeStiffness);
-  const colsRef = useRef(cols);
-  const rowsRef = useRef(rows);
+  const eyeletSizeRef = useRef(eyeletSize);
+  const eyeletPaddingRef = useRef(eyeletPadding);
   const gapRef = useRef(gap);
   const setActiveRef = useRef(setActive);
+
+  useEffect(() => {
+    ropeThicknessRef.current = ropeThickness;
+    ropeStiffnessRef.current = ropeStiffness;
+  });
 
   useEffect(() => {
     setActiveRef.current = setActive;
@@ -43,8 +48,8 @@ export default function PhysicsCanvas({
   useEffect(() => {
     ropeThicknessRef.current = ropeThickness;
     ropeStiffnessRef.current = ropeStiffness;
-    colsRef.current = cols;
-    rowsRef.current = rows;
+    eyeletSizeRef.current = eyeletSize;
+    eyeletPaddingRef.current = eyeletPadding;
     gapRef.current = gap;
 
     const {
@@ -653,7 +658,7 @@ export default function PhysicsCanvas({
       Runner.stop(runner);
       Engine.clear(engine);
     };
-  }, [cols, rows, cols, gap]);
+  }, [gap]);
 
   useEffect(() => {
     ropeThicknessRef.current = ropeThickness;

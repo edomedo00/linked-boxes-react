@@ -319,15 +319,20 @@ input[type="range"]::-webkit-slider-thumb {
 
 /* 
 
-// se debe autoseleccionar la ultima caja creada??
 
-sliders and the paddings from them, they are not margin right
 
 download image text is not vertically centered
-
+el color cambia el relleno de las cajas, o las cuerdas,  cambia el de la proxima figura, o la figura seleccionada, o que
+el texto del nombre del color se pierde con el color de la fuente
 the gap in the box controls goes to 2rem when selected and 1.5 rem when add a box
 
-el texto del nombre del color se pierde con el color de la fuente
 
-el color cambia el relleno de las cajas, o las cuerdas,  cambia el de la proxima figura, o la figura seleccionada, o que
+
+
+
+que desaparezcan los eyelets cuando se deseleccione una caja
+
+si estas en el modo agregar caja no puedes seleccionar una caja
+
+
 */

@@ -6,7 +6,7 @@ import DeleteIcon from "./assets/delete.svg";
 import TextIcon from "./assets/text.svg";
 import TextLeftIcon from "./assets/text-left.svg";
 import TextCenterIcon from "./assets/text-center.svg";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 
 const colors = [
   { hex: "#E6E6E6", name: "gray" },
@@ -20,9 +20,8 @@ function App() {
   const [sliders, setSliders] = useState({
     ropeStiffness: 1,
     ropeThickness: 4,
-    prop3: 50,
-    cols: 11,
-    rows: 11,
+    eyeletSize: 11,
+    eyeletPading: 11,
     gap: 10,
   });
 
@@ -32,7 +31,10 @@ function App() {
     mode: "",
   });
 
-  const handleSetActive = useCallback((val) => setActive(val), []);
+  const handleSetActive = useCallback(
+    (val: typeof active) => setActive(val),
+    [],
+  );
 
   const [activeButton, setActiveButton] = useState("connect");
 
@@ -93,22 +95,6 @@ function App() {
         </div>
         <div className="controls-boxes">
           <Slider
-            value={sliders.cols}
-            min={5}
-            max={15}
-            onChange={(val: number) => setSliders({ ...sliders, cols: val })}
-          >
-            <p>columns</p>
-          </Slider>
-          <Slider
-            value={sliders.rows}
-            min={5}
-            max={15}
-            onChange={(val: number) => setSliders({ ...sliders, rows: val })}
-          >
-            <p>rows</p>
-          </Slider>
-          <Slider
             value={sliders.gap}
             min={5}
             max={25}
@@ -116,9 +102,30 @@ function App() {
           >
             <p>gap</p>
           </Slider>
-          <div className="">
+          <Slider
+            value={sliders.eyeletSize}
+            min={5}
+            max={15}
+            onChange={(val: number) =>
+              setSliders({ ...sliders, eyeletSize: val })
+            }
+          >
+            <p>eyelet size</p>
+          </Slider>
+          <Slider
+            value={sliders.eyeletPading}
+            min={5}
+            max={15}
+            onChange={(val: number) =>
+              setSliders({ ...sliders, eyeletPading: val })
+            }
+          >
+            <p>eyelet padding</p>
+          </Slider>
+
+          {/* <div className="">
             {active.id} {active.mode}
-          </div>
+          </div> */}
         </div>
         <div className="controls-download">
           <button className="btn btn-download">
@@ -141,7 +148,7 @@ function App() {
 
         <div className="box-controls">
           {/* <p>add a box</p> */}
-          <p>box 1</p>
+          <p>{active.id !== null ? `box ${active.id + 1}` : "add a box"}</p>
           <span className="controls-box-divider"></span>
           <div className="box-controls-icons">
             <button
@@ -218,15 +225,15 @@ function App() {
   );
 }
 
-function AdtiveDisplay({ activeRef }) {
-  const [display, setDisplay] = useState({ id: null, mode: "" });
+// function AdtiveDisplay({ activeRef }) {
+//   const [display, setDisplay] = useState({ id: null, mode: "" });
 
-  return (
-    <div>
-      {display.id}
-      {display.mode}
-    </div>
-  );
-}
+//   return (
+//     <div>
+//       {display.id}
+//       {display.mode}
+//     </div>
+//   );
+// }
 
 export default App;
