@@ -25,6 +25,8 @@ function App() {
     gap: 10,
   });
 
+  const [mode, setMode] = useState("default");
+
   // const activeRef = useRef({ id: null, mode: "" });
   const [active, setActive] = useState({
     id: null,
@@ -35,6 +37,10 @@ function App() {
     (val: typeof active) => setActive(val),
     [],
   );
+
+  const handleSetMode = useCallback((val: typeof mode) => {
+    setMode(val);
+  }, []);
 
   const [activeButton, setActiveButton] = useState("connect");
 
@@ -126,9 +132,10 @@ function App() {
             <p>eyelet padding</p>
           </Slider>
 
-          {/* <div className="">
+          <div className="">
             {active.id} {active.mode}
-          </div> */}
+          </div>
+          <div className="">{mode}</div>
         </div>
         <div className="controls-download">
           <button className="btn btn-download">
@@ -140,88 +147,130 @@ function App() {
       <div className="canvas-container">
         <div className="canvas-wrapper">
           <Boxes
+            gap={sliders.gap}
             ropeStiffness={sliders.ropeStiffness}
             ropeThickness={sliders.ropeThickness}
             eyeletRadius={sliders.eyeletRadius}
             eyeletPadding={sliders.eyeletPadding}
-            gap={sliders.gap}
             setActive={handleSetActive}
+            mode={mode}
+            setMode={handleSetMode}
           />
         </div>
 
-        <div className="box-controls">
+        <div
+          className={`box-controls ${mode === "create" ? "box-controls-create-mode" : ""}`}
+        >
           {/* <p>add a box</p> */}
-          <p>{active.id !== null ? `box ${active.id + 1}` : "add a box"}</p>
-          <span className="controls-box-divider"></span>
-          <div className="box-controls-icons">
-            <button
-              className="btn-box-icons"
-              onClick={() => setActiveButton("connect")}
-            >
-              <img src={ConnectionIcon} alt="connection" />
-              {activeButton === "connect" ? (
-                <div className="selected-icon" />
-              ) : (
-                ""
-              )}
-            </button>
-            <button
-              className="btn-box-icons"
-              onClick={() => setActiveButton("disconnect")}
-            >
-              <img src={DisconnectIcon} alt="disconnect" />
-              {activeButton === "disconnect" ? (
-                <div className="selected-icon" />
-              ) : (
-                ""
-              )}
-            </button>
-            <button
-              className="btn-box-icons"
-              onClick={() => setActiveButton("text")}
-            >
-              <img src={TextIcon} alt="text" />
-              {activeButton === "text" ? <div className="selected-icon" /> : ""}
-            </button>
-            <button
-              className="btn-box-icons"
-              onClick={() => setActiveButton("textLeft")}
-            >
-              <img src={TextLeftIcon} alt="text left" />
-              {activeButton === "textLeft" ? (
-                <div className="selected-icon" />
-              ) : (
-                ""
-              )}
-            </button>
-            <button
-              className="btn-box-icons"
-              onClick={() => setActiveButton("textCenter")}
-            >
-              <img src={TextCenterIcon} alt="text center" />
-              {activeButton === "textCenter" ? (
-                <div className="selected-icon" />
-              ) : (
-                ""
-              )}
-            </button>
-            <button
-              className="btn-box-icons"
-              onClick={() => setActiveButton("delete")}
-            >
-              <img src={DeleteIcon} alt="delete" />
-              {activeButton === "delete" ? (
-                <div className="selected-icon" />
-              ) : (
-                ""
-              )}
-            </button>
-          </div>
 
-          <div className="btn btn-box-controls">
+          {(() => {
+            if (mode === "create") {
+              return "";
+            }
+            if (mode === "default") {
+              return <p>add a box</p>;
+            }
+            if (mode === "modify" && active.id !== null) {
+              return <p>{`box ${active.id + 1}`}</p>;
+            }
+          })()}
+
+          {/* {(() => {
+            if (active.id && mode !== "create") {
+              return <p>{`box ${active.id + 1}`}</p>;
+            }
+            if (mode === "default") {
+              return <p>add a box</p>;
+            }
+            return "";
+          })()} */}
+
+          {(() => {
+            if (mode === "modify" && active.id !== null) {
+              return (
+                <>
+                  <span className="controls-box-divider"></span>
+                  <div className="box-controls-icons">
+                    <button
+                      className="btn-box-icons"
+                      onClick={() => setActiveButton("connect")}
+                    >
+                      <img src={ConnectionIcon} alt="connection" />
+                      {activeButton === "connect" ? (
+                        <div className="selected-icon" />
+                      ) : (
+                        ""
+                      )}
+                    </button>
+                    <button
+                      className="btn-box-icons"
+                      onClick={() => setActiveButton("disconnect")}
+                    >
+                      <img src={DisconnectIcon} alt="disconnect" />
+                      {activeButton === "disconnect" ? (
+                        <div className="selected-icon" />
+                      ) : (
+                        ""
+                      )}
+                    </button>
+                    <button
+                      className="btn-box-icons"
+                      onClick={() => setActiveButton("text")}
+                    >
+                      <img src={TextIcon} alt="text" />
+                      {activeButton === "text" ? (
+                        <div className="selected-icon" />
+                      ) : (
+                        ""
+                      )}
+                    </button>
+                    <button
+                      className="btn-box-icons"
+                      onClick={() => setActiveButton("textLeft")}
+                    >
+                      <img src={TextLeftIcon} alt="text left" />
+                      {activeButton === "textLeft" ? (
+                        <div className="selected-icon" />
+                      ) : (
+                        ""
+                      )}
+                    </button>
+                    <button
+                      className="btn-box-icons"
+                      onClick={() => setActiveButton("textCenter")}
+                    >
+                      <img src={TextCenterIcon} alt="text center" />
+                      {activeButton === "textCenter" ? (
+                        <div className="selected-icon" />
+                      ) : (
+                        ""
+                      )}
+                    </button>
+                    <button
+                      className="btn-box-icons"
+                      onClick={() => setActiveButton("delete")}
+                    >
+                      <img src={DeleteIcon} alt="delete" />
+                      {activeButton === "delete" ? (
+                        <div className="selected-icon" />
+                      ) : (
+                        ""
+                      )}
+                    </button>
+                  </div>
+                </>
+              );
+            }
+            return <></>;
+          })()}
+
+          <button
+            className="btn btn-box-controls"
+            onClick={() => setMode(mode === "default" ? "create" : "default")}
+          >
             <span className="plus-symbol-1"></span>
             <span className="plus-symbol-2"></span>
-          </div>
+          </button>
         </div>
       </div>
     </main>

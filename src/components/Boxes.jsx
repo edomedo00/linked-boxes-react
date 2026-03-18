@@ -11,6 +11,11 @@ const SEG_LEN = 13;
 const LINK_R = 3.5;
 // const SLACK = 1.3;
 // const ROPE_THICKNESS = 4;
+let eyeletFill = null;
+
+const LIGHT_GREY = "#E6E6E6";
+const MEDIUM_GREY = "#b8babc33";
+const DARK_GREY = "#B8BABC";
 
 export default function PhysicsCanvas({
   ropeThickness,
@@ -19,6 +24,8 @@ export default function PhysicsCanvas({
   eyeletRadius,
   eyeletPadding,
   setActive,
+  mode,
+  setMode,
 }) {
   const canvasRef = useRef(null);
   const ropeThicknessRef = useRef(ropeThickness);
@@ -27,10 +34,17 @@ export default function PhysicsCanvas({
   const eyeletPaddingRef = useRef(eyeletPadding);
   const gapRef = useRef(gap);
   const setActiveRef = useRef(setActive);
+  const appliedGapRef = useRef(gap);
+  const modeRef = useRef(mode);
+  const setModeRef = useRef(setMode);
 
   useEffect(() => {
     setActiveRef.current = setActive;
   }, [setActive]);
+
+  useEffect(() => {
+    setModeRef.current = setMode;
+  }, [setMode]);
 
   useEffect(() => {
     gapRef.current = gap;
@@ -46,7 +60,15 @@ export default function PhysicsCanvas({
     eyeletPaddingRef.current = eyeletPadding;
   }, [eyeletRadius, eyeletPadding]);
 
-  const appliedGapRef = useRef(gap);
+  useEffect(() => {
+    modeRef.current = mode;
+    if (modeRef.current === "create" || modeRef.current === "default") {
+      eyeletFill = DARK_GREY;
+    } else if (modeRef.current === "modify") {
+      eyeletFill = LIGHT_GREY;
+    }
+    console.log(modeRef.current);
+  }, [mode]);
 
   useEffect(() => {
     const {
@@ -84,6 +106,7 @@ export default function PhysicsCanvas({
     let nextFigureId = 0;
     let nextEyeletId = 0;
     let nextRopeId = 0;
+    // let mode = "select";
 
     // --- Engine ---
     const engine = Engine.create({ gravity: { y: 1.5 } });
@@ -96,7 +119,7 @@ export default function PhysicsCanvas({
         width: W,
         height: H,
         wireframes: false,
-        background: "#E6E6E6",
+        background: LIGHT_GREY,
       },
     });
 
@@ -141,7 +164,7 @@ export default function PhysicsCanvas({
         boxH,
         {
           isStatic: true,
-          render: { fillStyle: "#b8babc33" },
+          render: { fillStyle: MEDIUM_GREY },
         },
       );
       box.body = body;
@@ -216,11 +239,13 @@ export default function PhysicsCanvas({
     }
 
     function setActiveBoxReference() {
-      setActiveRef.current(
-        activeBoxFigure
-          ? { id: activeBoxFigure.id, mode: "active" }
-          : { id: null, mode: "" },
-      );
+      if (activeBoxFigure) {
+        setActiveRef.current({ id: activeBoxFigure.id, mode: "active" });
+        setModeRef.current("modify");
+      } else {
+        setActiveRef.current({ id: null, mode: "" });
+        setModeRef.current("default");
+      }
     }
 
     // --- Rope ---
@@ -291,7 +316,7 @@ export default function PhysicsCanvas({
         {
           isStatic: true,
           label: "eyelet",
-          render: { fillStyle: "#E6E6E6", strokeStyle: "none" },
+          render: { fillStyle: "#000000", strokeStyle: "none" },
           collisionFilter: { mask: 0 },
         },
       );
@@ -329,7 +354,7 @@ export default function PhysicsCanvas({
           {
             isStatic: true,
             label: "eyelet",
-            render: { fillStyle: "#E6E6E6", strokeStyle: "none" },
+            render: { fillStyle: eyeletFill, strokeStyle: "none" },
             collisionFilter: { mask: 0 },
           },
         );
@@ -427,7 +452,7 @@ export default function PhysicsCanvas({
         if (!fig.body) {
           fig.body = Bodies.rectangle(cx, cy, w, h, {
             isStatic: true,
-            render: { fillStyle: "#B8BABC", opacity: 1 },
+            render: { fillStyle: DARK_GREY, opacity: 1 },
           });
           Composite.add(world, fig.body);
           for (const eyelet of fig.eyelets) {
@@ -436,6 +461,7 @@ export default function PhysicsCanvas({
           }
         }
       }
+
       syncEyelets();
     }
 
@@ -507,10 +533,14 @@ export default function PhysicsCanvas({
         hovered.map(({ row, col }) => `${row},${col}`),
       );
       for (const box of gridBoxes) {
-        if (!box.body) continue;
-        box.body.render.fillStyle = hoveredSet.has(`${box.row},${box.col}`)
-          ? "#B8BABC"
-          : "#b8babc33";
+        if (modeRef.current !== "create") {
+          box.body.render.fillStyle = LIGHT_GREY;
+        } else {
+          if (!box.body) continue;
+          box.body.render.fillStyle = hoveredSet.has(`${box.row},${box.col}`)
+            ? DARK_GREY
+            : MEDIUM_GREY;
+        }
       }
     }
 
@@ -544,7 +574,7 @@ export default function PhysicsCanvas({
           y + newBoxH / 2,
           newBoxW,
           newBoxH,
-          { isStatic: true, render: { fillStyle: "#b8babc33" } },
+          { isStatic: true, render: { fillStyle: MEDIUM_GREY } },
         );
         Composite.add(world, box.body);
       }
@@ -609,7 +639,7 @@ export default function PhysicsCanvas({
       if (!activeBoxFigure) return;
       const { TL, BR } = activeBoxFigure.absCoor;
       ctx.save();
-      ctx.strokeStyle = "#000000";
+      ctx.strokeStyle = modeRef.current === "create" ? DARK_GREY : "#000000";
       ctx.lineWidth = 0.5;
       ctx.strokeRect(TL.x, TL.y, BR.x - TL.x, BR.y - TL.y);
       ctx.restore();
@@ -618,15 +648,21 @@ export default function PhysicsCanvas({
     // --- Event handlers ---
     function onDown(e) {
       const pos = canvasPos(e);
-      const eyelet = selectEyelet();
+
+      if (modeRef.current === "create") {
+        firstBox = selectBox(pos);
+        secondBox = selectBox(pos);
+        return;
+      }
+
+      if (modeRef.current === "modify") {
+        const eyelet = selectEyelet();
+        firstEyelet = eyelet?.free ? eyelet : null;
+
+        if (firstEyelet) createRopeFigure();
+      }
+
       const clickedFig = selectBoxFigure(pos);
-
-      firstBox = selectBox(pos);
-      secondBox = selectBox(pos);
-
-      firstEyelet = eyelet?.free ? eyelet : null;
-      if (firstEyelet) createRopeFigure();
-
       if (clickedFig === 1) return;
       activeBoxFigure =
         clickedFig?.id === activeBoxFigure?.id ? null : clickedFig;
@@ -636,8 +672,8 @@ export default function PhysicsCanvas({
     function onUp() {
       if (firstBox && secondBox) {
         createBoxFigure();
-        activeBoxFigure = boxFigures[boxFigures.length - 1];
-        setActiveBoxReference();
+        // activeBoxFigure = boxFigures[boxFigures.length - 1];
+        // setActiveBoxReference();
       }
 
       if (tempRope) {
