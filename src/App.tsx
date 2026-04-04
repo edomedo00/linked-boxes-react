@@ -6,7 +6,7 @@ import DeleteIcon from "./assets/delete.svg";
 import TextIcon from "./assets/text.svg";
 import TextLeftIcon from "./assets/text-left.svg";
 import TextCenterIcon from "./assets/text-center.svg";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 const colors = [
   { hex: "#E6E6E6", name: "gray" },
@@ -14,6 +14,12 @@ const colors = [
   { hex: "#181818", name: "black" },
   { hex: "#10E41A", name: "green" },
 ];
+
+interface BoxControls {
+  disconnect: () => void;
+  delete: () => void;
+  setText: (position: string, value: string) => void;
+}
 
 function App() {
   const [selectedColor, setSelectedColor] = useState("#E6E6E6");
@@ -31,18 +37,31 @@ function App() {
   const [active, setActive] = useState({
     id: null,
     mode: "",
+    textTop: "",
+    textBottom: "",
   });
+
+  const boxControls = useRef<BoxControls | null>(null);
 
   const handleSetActive = useCallback(
     (val: typeof active) => setActive(val),
     [],
   );
 
+  const resetActive = () =>
+    setActive({ id: null, mode: "", textTop: "", textBottom: "" });
+
+  // const handleSetActiveTextMode = useCallback(
+  //   (val: typeof active) => setActiveTextMode(val),
+  //   [],
+  // );
+
   const handleSetMode = useCallback((val: typeof mode) => {
     setMode(val);
   }, []);
 
   const [activeButton, setActiveButton] = useState("connect");
+  const [activeTextMode, setActiveTextMode] = useState("center");
 
   return (
     <main className="main">
@@ -152,11 +171,61 @@ function App() {
             ropeThickness={sliders.ropeThickness}
             eyeletRadius={sliders.eyeletRadius}
             eyeletPadding={sliders.eyeletPadding}
+            active={active}
             setActive={handleSetActive}
             mode={mode}
             setMode={handleSetMode}
+            onReady={(controls: BoxControls) =>
+              (boxControls.current = controls)
+            }
+            activeButton={activeButton}
           />
         </div>
+
+        {activeButton === "text" && active.id !== null ? (
+          <div className="text-input">
+            <div className="text-input-top">
+              <div className="text-input-number">1</div>
+              <input
+                value={active.textTop}
+                type="text"
+                name="text-top"
+                id="text-top"
+                placeholder="type something"
+                className="text-input-input"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  boxControls.current?.setText("top", val);
+                  setActive((prev) => ({
+                    ...prev,
+                    textTop: val.toUpperCase(),
+                  }));
+                }}
+              />
+            </div>
+            <div className="text-input-bottom">
+              <div className="text-input-number">2</div>
+              <input
+                value={active.textBottom}
+                type="text"
+                name="text-top"
+                id="text-top"
+                placeholder="type something"
+                className="text-input-input"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  boxControls.current?.setText("bottom", val);
+                  setActive((prev) => ({
+                    ...prev,
+                    textBottom: val.toUpperCase(),
+                  }));
+                }}
+              />
+            </div>
+          </div>
+        ) : (
+          <></>
+        )}
 
         <div
           className={`box-controls ${mode === "create" ? "box-controls-create-mode" : ""}`}
@@ -202,17 +271,16 @@ function App() {
                         ""
                       )}
                     </button>
-                    <button
-                      className="btn-box-icons"
-                      onClick={() => setActiveButton("disconnect")}
-                    >
-                      <img src={DisconnectIcon} alt="disconnect" />
-                      {activeButton === "disconnect" ? (
-                        <div className="selected-icon" />
-                      ) : (
-                        ""
-                      )}
-                    </button>
+                    {activeButton === "connect" ? (
+                      <button
+                        className="btn-box-icons"
+                        onClick={() => boxControls.current?.disconnect()}
+                      >
+                        <img src={DisconnectIcon} alt="disconnect" />
+                      </button>
+                    ) : (
+                      <></>
+                    )}
                     <button
                       className="btn-box-icons"
                       onClick={() => setActiveButton("text")}
@@ -224,31 +292,37 @@ function App() {
                         ""
                       )}
                     </button>
+                    {activeButton === "text" ? (
+                      <>
+                        <button
+                          className="btn-box-icons"
+                          onClick={() => setActiveTextMode("left")}
+                        >
+                          <img src={TextLeftIcon} alt="text left" />
+                          {activeTextMode === "left" ? (
+                            <div className="selected-icon" />
+                          ) : (
+                            ""
+                          )}
+                        </button>
+                        <button
+                          className="btn-box-icons"
+                          onClick={() => setActiveTextMode("center")}
+                        >
+                          <img src={TextCenterIcon} alt="text center" />
+                          {activeTextMode === "center" ? (
+                            <div className="selected-icon" />
+                          ) : (
+                            ""
+                          )}
+                        </button>
+                      </>
+                    ) : (
+                      <></>
+                    )}
                     <button
                       className="btn-box-icons"
-                      onClick={() => setActiveButton("textLeft")}
-                    >
-                      <img src={TextLeftIcon} alt="text left" />
-                      {activeButton === "textLeft" ? (
-                        <div className="selected-icon" />
-                      ) : (
-                        ""
-                      )}
-                    </button>
-                    <button
-                      className="btn-box-icons"
-                      onClick={() => setActiveButton("textCenter")}
-                    >
-                      <img src={TextCenterIcon} alt="text center" />
-                      {activeButton === "textCenter" ? (
-                        <div className="selected-icon" />
-                      ) : (
-                        ""
-                      )}
-                    </button>
-                    <button
-                      className="btn-box-icons"
-                      onClick={() => setActiveButton("delete")}
+                      onClick={() => boxControls.current?.delete()}
                     >
                       <img src={DeleteIcon} alt="delete" />
                       {activeButton === "delete" ? (
@@ -266,7 +340,10 @@ function App() {
 
           <button
             className="btn btn-box-controls"
-            onClick={() => setMode(mode === "default" ? "create" : "default")}
+            onClick={() => {
+              setMode(mode === "default" ? "create" : "default");
+              resetActive();
+            }}
           >
             <span className="plus-symbol-1"></span>
             <span className="plus-symbol-2"></span>
