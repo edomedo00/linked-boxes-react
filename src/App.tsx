@@ -9,8 +9,8 @@ import TextCenterIcon from "./assets/text-center.svg";
 import { useCallback, useRef, useState } from "react";
 
 const colors = [
-  { hex: "#E6E6E6", name: "gray" },
-  { hex: "#83868B", name: "dark gray" },
+  { hex: "#E6E6E6", name: "grey" },
+  { hex: "#83868B", name: "dark grey" },
   { hex: "#181818", name: "black" },
   { hex: "#10E41A", name: "green" },
 ];
@@ -19,16 +19,18 @@ interface BoxControls {
   disconnect: () => void;
   delete: () => void;
   setText: (position: string, value: string) => void;
+  setTextMode: (textMode: string) => void;
 }
 
 function App() {
-  const [selectedColor, setSelectedColor] = useState("#E6E6E6");
+  const [selectedColor, setSelectedColor] = useState("grey");
   const [sliders, setSliders] = useState({
     ropeStiffness: 1,
     ropeThickness: 4,
     eyeletRadius: 8,
     eyeletPadding: 7,
     gap: 10,
+    fontSize: 20,
   });
 
   const [mode, setMode] = useState("default");
@@ -39,6 +41,7 @@ function App() {
     mode: "",
     textTop: "",
     textBottom: "",
+    textMode: "",
   });
 
   const boxControls = useRef<BoxControls | null>(null);
@@ -49,7 +52,13 @@ function App() {
   );
 
   const resetActive = () =>
-    setActive({ id: null, mode: "", textTop: "", textBottom: "" });
+    setActive({
+      id: null,
+      mode: "",
+      textTop: "",
+      textBottom: "",
+      textMode: "",
+    });
 
   // const handleSetActiveTextMode = useCallback(
   //   (val: typeof active) => setActiveTextMode(val),
@@ -61,7 +70,7 @@ function App() {
   }, []);
 
   const [activeButton, setActiveButton] = useState("connect");
-  const [activeTextMode, setActiveTextMode] = useState("center");
+  // const [activeTextMode, setActiveTextMode] = useState("center");
 
   return (
     <main className="main">
@@ -72,25 +81,35 @@ function App() {
         </div>
         <div className="controls-colors">
           <div className="colors-text">
-            <p>color</p>
+            <p>color theme</p>
             <p
               className="color-name"
-              style={{ backgroundColor: selectedColor }}
+              style={{
+                backgroundColor: colors.find((c) => c.name === selectedColor)
+                  ?.hex,
+                color:
+                  colors.find((c) => c.name === selectedColor)?.name ===
+                    "black" ||
+                  colors.find((c) => c.name === selectedColor)?.name ===
+                    "dark grey"
+                    ? "#ffffff"
+                    : "#12161c",
+              }}
             >
-              {colors.find((c) => c.hex === selectedColor)?.name}
+              {colors.find((c) => c.name === selectedColor)?.name}
             </p>
           </div>
           <div className="color-selector">
             {colors.map((c) => (
               <button
-                key={c.hex}
-                className={`btn-color ${selectedColor === c.hex ? "selected-color" : ""}`}
+                key={c.name}
+                className={`btn-color ${selectedColor === c.name ? "selected-color" : ""}`}
                 style={{
                   backgroundColor: c.hex,
                   outline:
-                    selectedColor === c.hex ? `1px solid ${c.hex}` : "none",
+                    selectedColor === c.name ? `1px solid ${c.hex}` : "none",
                 }}
-                onClick={() => setSelectedColor(c.hex)}
+                onClick={() => setSelectedColor(c.name)}
               ></button>
             ))}
           </div>
@@ -148,16 +167,52 @@ function App() {
               setSliders({ ...sliders, eyeletPadding: val })
             }
           >
-            <p>eyelet padding</p>
+            <p>padding</p>
           </Slider>
-
-          <div className="">
-            {active.id} {active.mode}
-          </div>
-          <div className="">{mode}</div>
+        </div>
+        <div className="controls-text">
+          <Slider
+            value={sliders.fontSize}
+            min={15}
+            max={30}
+            step={1}
+            onChange={(val: number) =>
+              setSliders({ ...sliders, fontSize: val })
+            }
+          >
+            <p>font size</p>
+          </Slider>
         </div>
         <div className="controls-download">
-          <button className="btn btn-download">
+          <button
+            className="btn btn-download"
+            onClick={() => {
+              const canvas = document.getElementById("boxes-canvas");
+              if (!(canvas instanceof HTMLCanvasElement)) return;
+
+              const scale = 3;
+
+              const tempCanvas = document.createElement("canvas");
+              tempCanvas.width = canvas.width * scale;
+              tempCanvas.height = canvas.height * scale;
+
+              const ctx = tempCanvas.getContext("2d");
+              if (!ctx) return;
+
+              ctx.scale(scale, scale);
+              ctx.imageSmoothingEnabled = true;
+
+              ctx.fillStyle = "#E6E6E6";
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+              ctx.drawImage(canvas, 0, 0);
+
+              const link = document.createElement("a");
+              link.download = "boxes.png";
+              link.href = tempCanvas.toDataURL("image/png", 1.0);
+              link.click();
+            }}
+          >
             <div className="download-dot"></div>
             <p className="download-text">download image</p>
           </button>
@@ -166,6 +221,7 @@ function App() {
       <div className="canvas-container">
         <div className="canvas-wrapper">
           <Boxes
+            color={selectedColor}
             gap={sliders.gap}
             ropeStiffness={sliders.ropeStiffness}
             ropeThickness={sliders.ropeThickness}
@@ -175,10 +231,12 @@ function App() {
             setActive={handleSetActive}
             mode={mode}
             setMode={handleSetMode}
+            // textMode={activeTextMode}
             onReady={(controls: BoxControls) =>
               (boxControls.current = controls)
             }
             activeButton={activeButton}
+            fontSize={sliders.fontSize}
           />
         </div>
 
@@ -203,7 +261,7 @@ function App() {
                 }}
               />
             </div>
-            <div className="text-input-bottom">
+            <div className="text-input-top">
               <div className="text-input-number">2</div>
               <input
                 value={active.textBottom}
@@ -296,10 +354,16 @@ function App() {
                       <>
                         <button
                           className="btn-box-icons"
-                          onClick={() => setActiveTextMode("left")}
+                          onClick={() => {
+                            boxControls.current?.setTextMode("left");
+                            setActive((prev) => ({
+                              ...prev,
+                              textMode: "left",
+                            }));
+                          }}
                         >
                           <img src={TextLeftIcon} alt="text left" />
-                          {activeTextMode === "left" ? (
+                          {active.textMode === "left" ? (
                             <div className="selected-icon" />
                           ) : (
                             ""
@@ -307,10 +371,16 @@ function App() {
                         </button>
                         <button
                           className="btn-box-icons"
-                          onClick={() => setActiveTextMode("center")}
+                          onClick={() => {
+                            boxControls.current?.setTextMode("center");
+                            setActive((prev) => ({
+                              ...prev,
+                              textMode: "center",
+                            }));
+                          }}
                         >
                           <img src={TextCenterIcon} alt="text center" />
-                          {activeTextMode === "center" ? (
+                          {active.textMode === "center" ? (
                             <div className="selected-icon" />
                           ) : (
                             ""
@@ -339,7 +409,7 @@ function App() {
           })()}
 
           <button
-            className="btn btn-box-controls"
+            className={`btn btn-box-controls ${mode === "create" || active.id !== null ? "active" : ""}`}
             onClick={() => {
               setMode(mode === "default" ? "create" : "default");
               resetActive();

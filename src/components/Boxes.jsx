@@ -13,28 +13,81 @@ const LINK_R = 3.5;
 let eyeletFill = null;
 
 const LIGHT_GREY = "#E6E6E6";
-const MEDIUM_GREY = "#b8babc33";
+const MEDIUM_GREY = "#B8BABC33"; //transparency
 const DARK_GREY = "#B8BABC";
+const GREEN = "#10e41a";
+const BLACK = "#181818";
 
-// interface BoxControls {
-//   disconnect: () => void;
-//   delete: () => void;
-// }
+function getTheme(color) {
+  switch (color) {
+    case "grey":
+      return {
+        box: DARK_GREY,
+        bg: LIGHT_GREY,
+        eyelet: LIGHT_GREY,
+        rope: LIGHT_GREY,
+        text: LIGHT_GREY,
+        grid: MEDIUM_GREY,
+        border: BLACK,
+        active: BLACK,
+      };
+
+    case "green":
+      return {
+        box: GREEN,
+        bg: LIGHT_GREY,
+        eyelet: GREEN,
+        rope: GREEN,
+        text: BLACK,
+        grid: MEDIUM_GREY,
+        border: BLACK,
+        active: BLACK,
+      };
+
+    case "dark grey":
+      return {
+        box: "#83868B", // no constant defined for this one
+        bg: LIGHT_GREY,
+        eyelet: "#83868B",
+        rope: "#83868B",
+        text: BLACK,
+        grid: MEDIUM_GREY,
+        border: BLACK,
+        active: GREEN,
+      };
+
+    default: // grey
+      return {
+        box: DARK_GREY,
+        bg: LIGHT_GREY,
+        eyelet: LIGHT_GREY,
+        rope: LIGHT_GREY,
+        text: LIGHT_GREY,
+        grid: MEDIUM_GREY,
+        active: BLACK,
+      };
+  }
+}
 
 export default function PhysicsCanvas({
   ropeThickness,
   ropeStiffness,
   gap,
+  color,
   eyeletRadius,
   eyeletPadding,
   active,
   setActive,
   mode,
   setMode,
+  textMode,
   onReady,
   activeButton,
+  fontSize,
 }) {
   const canvasRef = useRef(null);
+  const themeRef = useRef(color);
+  const applyThemeRef = useRef(null);
   const ropeThicknessRef = useRef(ropeThickness);
   const ropeStiffnessRef = useRef(ropeStiffness);
   const eyeletRadiusRef = useRef(eyeletRadius);
@@ -45,8 +98,15 @@ export default function PhysicsCanvas({
   const appliedGapRef = useRef(gap);
   const modeRef = useRef(mode);
   const setModeRef = useRef(setMode);
+  const textModeRef = useRef(textMode);
   const activeButtonRef = useRef(activeButton);
   const activeBoxFigureRef = useRef(null);
+  const fontSizeRef = useRef(fontSize);
+
+  useEffect(() => {
+    themeRef.current = getTheme(color);
+    applyThemeRef.current?.();
+  }, [color]);
 
   useEffect(() => {
     activeRef.current = active;
@@ -67,8 +127,16 @@ export default function PhysicsCanvas({
   }, [setMode]);
 
   useEffect(() => {
+    textModeRef.current = textMode;
+  }, [textMode]);
+
+  useEffect(() => {
     gapRef.current = gap;
   }, [gap]);
+
+  useEffect(() => {
+    fontSizeRef.current = fontSize;
+  }, [fontSize]);
 
   useEffect(() => {
     ropeStiffnessRef.current = ropeStiffness;
@@ -86,15 +154,15 @@ export default function PhysicsCanvas({
 
     if (mode === "modify") {
       if (activeButton === "text") {
-        eyeletFill = DARK_GREY;
+        eyeletFill = themeRef.current.box;
       } else if (activeButton === "connect") {
-        eyeletFill = LIGHT_GREY;
+        eyeletFill = themeRef.current.eyelet;
       } else {
-        eyeletFill = LIGHT_GREY;
+        eyeletFill = themeRef.current.eyelet;
       }
     } else {
       // mode === "create" or "default"
-      eyeletFill = DARK_GREY;
+      eyeletFill = themeRef.current.box;
     }
 
     console.log(activeButton);
@@ -118,12 +186,13 @@ export default function PhysicsCanvas({
       Events,
     } = Matter;
 
+    applyThemeRef.current = applyThemeToScene;
     const canvas = canvasRef.current;
     const container = canvas.parentElement;
     let W = container.clientWidth;
     let H = container.clientHeight;
-    canvas.width = W;
-    canvas.height = H;
+
+    const dpr = window.devicePixelRatio || 1;
 
     // --- State ---
     let mousePos = null;
@@ -155,9 +224,18 @@ export default function PhysicsCanvas({
         width: W,
         height: H,
         wireframes: false,
-        background: LIGHT_GREY,
+        background: themeRef.current.bg,
+        pixelRatio: dpr,
       },
     });
+
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+
+    render.context.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     Render.run(render);
     const runner = Runner.create();
@@ -200,12 +278,44 @@ export default function PhysicsCanvas({
         boxH,
         {
           isStatic: true,
-          render: { fillStyle: MEDIUM_GREY },
+          render: { fillStyle: themeRef.current.grid },
         },
       );
       box.body = body;
       Composite.add(world, body);
     });
+
+    function applyThemeToScene() {
+      const theme = themeRef.current;
+
+      // --- Grid ---
+      for (const box of gridBoxes) {
+        if (!box.body) continue;
+        box.body.render.fillStyle = theme.bg;
+      }
+
+      // --- Box figures ---
+      for (const fig of boxFigures) {
+        if (fig.body) {
+          fig.body.render.fillStyle = theme.box;
+        }
+      }
+
+      // --- Eyelets ---
+      for (const eyelet of eyeletFigures) {
+        if (!eyelet.body) continue;
+
+        eyelet.body.render.fillStyle =
+          eyelet.disabled || activeButtonRef.current === "text"
+            ? theme.box
+            : theme.eyelet;
+      }
+
+      // --- Background ---
+      render.options.background = theme.bg;
+    }
+
+    applyThemeRef.current = applyThemeToScene;
 
     // --- Helpers ---
     function canvasPos(e) {
@@ -246,11 +356,12 @@ export default function PhysicsCanvas({
       return (
         eyeletFigures.find(
           (eye) =>
+            !eye.disabled &&
             Math.hypot(
               mousePos.x - eye.body.position.x,
               mousePos.y - eye.body.position.y,
             ) <
-            eyeletRadiusRef.current + HANDLE_EYELET,
+              eyeletRadiusRef.current + HANDLE_EYELET,
         ) ?? null
       );
     }
@@ -282,6 +393,7 @@ export default function PhysicsCanvas({
           mode: "active",
           textTop: activeBoxFigureRef.current.textTop || "",
           textBottom: activeBoxFigureRef.current.textBottom || "",
+          textMode: activeBoxFigureRef.current.textMode || "center",
         });
         setModeRef.current("modify");
       } else {
@@ -363,7 +475,7 @@ export default function PhysicsCanvas({
         {
           isStatic: true,
           label: "eyelet",
-          render: { fillStyle: "#000000", strokeStyle: "none" },
+          render: { fillStyle: themeRef.current.box, strokeStyle: "none" },
           collisionFilter: { mask: 0 },
         },
       );
@@ -393,6 +505,12 @@ export default function PhysicsCanvas({
       for (const eyelet of eyeletFigures) {
         const newOffset = offsets[eyelet.corner.i];
         eyelet.offset = newOffset;
+
+        const parentFig = boxFigures.find((f) => f.id === eyelet.figureId);
+        const isLeftEyelet = eyelet.corner.i === 1 || eyelet.corner.i === 3;
+        const isDisabled = parentFig?.textMode === "left" && isLeftEyelet;
+        eyelet.disabled = isDisabled;
+
         Composite.remove(world, eyelet.body);
         eyelet.body = Bodies.circle(
           eyelet.corner.x + newOffset.x,
@@ -401,7 +519,12 @@ export default function PhysicsCanvas({
           {
             isStatic: true,
             label: "eyelet",
-            render: { fillStyle: eyeletFill, strokeStyle: "none" },
+            render: {
+              fillStyle: eyelet.disabled
+                ? themeRef.current.box
+                : (eyeletFill ?? themeRef.current.eyelet),
+              strokeStyle: "none",
+            },
             collisionFilter: { mask: 0 },
           },
         );
@@ -422,6 +545,11 @@ export default function PhysicsCanvas({
           !box.free,
       );
       if (unavailable) return;
+
+      // console.log({ minCol, maxCol, minRow, maxRow });
+      const boxSize = (maxCol - minCol) * (maxRow - minRow);
+      // console.log(boxSize);
+      if (boxSize < 1) return;
 
       const eyelets = [
         createBoxEyelet(
@@ -463,6 +591,7 @@ export default function PhysicsCanvas({
         eyelets,
         textTop: "",
         textBottom: "",
+        textMode: textModeRef.current,
       };
 
       gridBoxes.forEach((box) => {
@@ -501,7 +630,7 @@ export default function PhysicsCanvas({
         if (!fig.body) {
           fig.body = Bodies.rectangle(cx, cy, w, h, {
             isStatic: true,
-            render: { fillStyle: DARK_GREY, opacity: 1 },
+            render: { fillStyle: themeRef.current.box, opacity: 1 },
           });
           Composite.add(world, fig.body);
           for (const eyelet of fig.eyelets) {
@@ -565,6 +694,26 @@ export default function PhysicsCanvas({
       }
     }
 
+    function deleteLeftEyeletRopesForFigure(fig) {
+      for (let i = ropeFigures.length - 1; i >= 0; i--) {
+        const rope = ropeFigures[i];
+        const startIsLeft =
+          rope.startEyelet.figureId === fig.id &&
+          (rope.startEyelet.corner.i === 1 || rope.startEyelet.corner.i === 3);
+        const endIsLeft =
+          rope.endEyelet.figureId === fig.id &&
+          (rope.endEyelet.corner.i === 1 || rope.endEyelet.corner.i === 3);
+
+        if (startIsLeft || endIsLeft) {
+          rope.links.forEach((link) => Composite.remove(world, link));
+          rope.constraints.forEach((c) => Composite.remove(world, c));
+          rope.startEyelet.free = true;
+          rope.endEyelet.free = true;
+          ropeFigures.splice(i, 1);
+        }
+      }
+    }
+
     // --- Sync ---
     function syncRopeFigures() {
       for (const rope of ropeFigures) {
@@ -585,12 +734,12 @@ export default function PhysicsCanvas({
       );
       for (const box of gridBoxes) {
         if (modeRef.current !== "create") {
-          box.body.render.fillStyle = LIGHT_GREY;
+          box.body.render.fillStyle = themeRef.current.bg;
         } else {
           if (!box.body) continue;
           box.body.render.fillStyle = hoveredSet.has(`${box.row},${box.col}`)
-            ? DARK_GREY
-            : MEDIUM_GREY;
+            ? themeRef.current.box
+            : themeRef.current.grid;
         }
       }
     }
@@ -625,7 +774,7 @@ export default function PhysicsCanvas({
           y + newBoxH / 2,
           newBoxW,
           newBoxH,
-          { isStatic: true, render: { fillStyle: MEDIUM_GREY } },
+          { isStatic: true, render: { fillStyle: themeRef.current.grid } },
         );
         Composite.add(world, box.body);
       }
@@ -674,7 +823,7 @@ export default function PhysicsCanvas({
     function drawRopeFigures(ctx) {
       for (const rope of ropeFigures) {
         ctx.save();
-        drawRope(ctx, rope.links, "#10e41a");
+        drawRope(ctx, rope.links, themeRef.current.rope);
         ctx.restore();
       }
     }
@@ -682,7 +831,7 @@ export default function PhysicsCanvas({
     function drawDraggingRope(ctx) {
       if (!tempRope || tempRope.links.length === 0) return;
       ctx.save();
-      drawRope(ctx, tempRope.links, "#10e41a");
+      drawRope(ctx, tempRope.links, themeRef.current.rope);
       ctx.restore();
     }
 
@@ -690,7 +839,10 @@ export default function PhysicsCanvas({
       if (!activeBoxFigureRef.current) return;
       const { TL, BR } = activeBoxFigureRef.current.absCoor;
       ctx.save();
-      ctx.strokeStyle = modeRef.current === "create" ? DARK_GREY : "#000000";
+      ctx.strokeStyle =
+        modeRef.current === "create"
+          ? themeRef.current.box
+          : themeRef.current.active;
       ctx.lineWidth = 0.5;
       ctx.strokeRect(TL.x, TL.y, BR.x - TL.x, BR.y - TL.y);
       ctx.restore();
@@ -705,17 +857,22 @@ export default function PhysicsCanvas({
         ctx.save();
 
         const boxHeight = BR.y - TL.y;
-        const fontSize = Math.min(30, boxHeight * 0.3);
+        const fontSize = fontSizeRef.current;
 
         ctx.font = `400 ${fontSize}px "SuisseMono"`;
         ctx.letterSpacing = `${-0.02 * fontSize}px`;
-        ctx.fillStyle = LIGHT_GREY;
+        ctx.fillStyle = themeRef.current.text;
         ctx.textAlign = "center";
+
+        const PADDING = eyeletPaddingRef.current;
+        const textMode = fig.textMode ?? "center";
+
+        const textX = textMode === "left" ? TL.x + PADDING : centerX;
+        ctx.textAlign = textMode;
 
         const hasTop = !!fig.textTop;
         const hasBottom = !!fig.textBottom;
 
-        // Helper: measure actual ink bounds of a string
         const getTextHeight = (text) => {
           const m = ctx.measureText(text);
           return {
@@ -725,23 +882,18 @@ export default function PhysicsCanvas({
           };
         };
 
-        // Padding as a proportion of font size rather than a fixed px value
-        const PADDING = fontSize * 0.4;
-
         if (hasTop && hasBottom) {
           const top = getTextHeight(fig.textTop);
           const bot = getTextHeight(fig.textBottom);
 
-          // Align baseline so the top of the ink sits at TL.y + PADDING
           ctx.textBaseline = "alphabetic";
-          ctx.fillText(fig.textTop, centerX, TL.y + PADDING + top.above);
+          ctx.fillText(fig.textTop, textX, TL.y + PADDING + top.above);
 
-          // Align baseline so the bottom of the ink sits at BR.y - PADDING
-          ctx.fillText(fig.textBottom, centerX, BR.y - PADDING - bot.below);
+          ctx.fillText(fig.textBottom, textX, BR.y - PADDING - bot.below);
         } else if (hasTop || hasBottom) {
           const text = fig.textTop || fig.textBottom;
           ctx.textBaseline = "middle";
-          ctx.fillText(text, centerX, centerY);
+          ctx.fillText(text, textX, centerY);
         }
 
         ctx.restore();
@@ -828,11 +980,6 @@ export default function PhysicsCanvas({
       }
     }
 
-    // function onKeydown(e) {
-    //   if (e.code === "KeyD") deleteBoxFigure();
-    //   else if (e.code === "KeyU") deleteBoxRopes();
-    // }
-
     onReady?.({
       disconnect: () => {
         deleteBoxRopes();
@@ -849,6 +996,15 @@ export default function PhysicsCanvas({
           activeBoxFigureRef.current.textTop = formatted;
         } else {
           activeBoxFigureRef.current.textBottom = formatted;
+        }
+      },
+      setTextMode: (textMode) => {
+        if (!activeBoxFigureRef.current) return;
+        activeBoxFigureRef.current.textMode = textMode;
+
+        if (textMode === "left") {
+          deleteLeftEyeletRopesForFigure(activeBoxFigureRef.current);
+          syncEyelets();
         }
       },
     });
@@ -876,14 +1032,21 @@ export default function PhysicsCanvas({
     });
 
     const observer = new ResizeObserver(([entry]) => {
+      const dpr = window.devicePixelRatio || 1;
+
       W = entry.contentRect.width;
       H = entry.contentRect.height;
-      canvas.width = W;
-      canvas.height = H;
+
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+
+      canvas.style.width = W + "px";
+      canvas.style.height = H + "px";
+
       render.options.width = W;
       render.options.height = H;
-      render.canvas.width = W;
-      render.canvas.height = H;
+
+      render.context.setTransform(dpr, 0, 0, dpr, 0, 0);
     });
 
     observer.observe(container);
@@ -903,5 +1066,5 @@ export default function PhysicsCanvas({
     };
   }, []);
 
-  return <canvas ref={canvasRef} />;
+  return <canvas ref={canvasRef} id="boxes-canvas" />;
 }
