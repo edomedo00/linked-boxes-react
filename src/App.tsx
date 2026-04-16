@@ -167,7 +167,7 @@ function App() {
           <Slider
             value={sliders.fontSize}
             min={15}
-            max={30}
+            max={40}
             step={1}
             onChange={(val: number) =>
               setSliders({ ...sliders, fontSize: val })
