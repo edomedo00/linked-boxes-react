@@ -35,7 +35,6 @@ function App() {
 
   const [mode, setMode] = useState("default");
 
-  // const activeRef = useRef({ id: null, mode: "" });
   const [active, setActive] = useState({
     id: null,
     mode: "",
@@ -60,17 +59,11 @@ function App() {
       textMode: "",
     });
 
-  // const handleSetActiveTextMode = useCallback(
-  //   (val: typeof active) => setActiveTextMode(val),
-  //   [],
-  // );
-
   const handleSetMode = useCallback((val: typeof mode) => {
     setMode(val);
   }, []);
 
   const [activeButton, setActiveButton] = useState("connect");
-  // const [activeTextMode, setActiveTextMode] = useState("center");
 
   return (
     <main className="main">
@@ -161,7 +154,7 @@ function App() {
           <Slider
             value={sliders.eyeletPadding}
             min={2}
-            max={20}
+            max={30}
             step={0.5}
             onChange={(val: number) =>
               setSliders({ ...sliders, eyeletPadding: val })
@@ -231,7 +224,6 @@ function App() {
             setActive={handleSetActive}
             mode={mode}
             setMode={handleSetMode}
-            // textMode={activeTextMode}
             onReady={(controls: BoxControls) =>
               (boxControls.current = controls)
             }
@@ -288,8 +280,6 @@ function App() {
         <div
           className={`box-controls ${mode === "create" ? "box-controls-create-mode" : ""}`}
         >
-          {/* <p>add a box</p> */}
-
           {(() => {
             if (mode === "create") {
               return "";
@@ -301,16 +291,6 @@ function App() {
               return <p>{`box ${active.id + 1}`}</p>;
             }
           })()}
-
-          {/* {(() => {
-            if (active.id && mode !== "create") {
-              return <p>{`box ${active.id + 1}`}</p>;
-            }
-            if (mode === "default") {
-              return <p>add a box</p>;
-            }
-            return "";
-          })()} */}
 
           {(() => {
             if (mode === "modify" && active.id !== null) {
@@ -423,16 +403,5 @@ function App() {
     </main>
   );
 }
-
-// function AdtiveDisplay({ activeRef }) {
-//   const [display, setDisplay] = useState({ id: null, mode: "" });
-
-//   return (
-//     <div>
-//       {display.id}
-//       {display.mode}
-//     </div>
-//   );
-// }
 
 export default App;

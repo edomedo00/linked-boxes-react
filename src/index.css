@@ -404,16 +404,5 @@ input[type="range"]::-webkit-slider-thumb {
 
 .text-input-input:focus {
   border: 1px solid #f4f5f5;
-  outline: none; /* optional: removes default blue outline */
+  outline: none;
 }
-
-/* 
-
-
-
-el color cambia el relleno de las cajas, o las cuerdas,  cambia el de la proxima figura, o la figura seleccionada, o que
-el texto del nombre del color se pierde con el color de la fuente
-the gap in the box controls goes to 2rem when selected and 1.5 rem when add a box
-
-
-*/

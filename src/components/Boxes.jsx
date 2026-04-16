@@ -1,19 +1,18 @@
 import { useEffect, useRef } from "react";
 import Matter from "matter-js";
-// import { disconnect, delete } from "process";
 
 const HANDLE_EYELET = 10;
 const GAP = 10;
 
-const ROWS = 11;
-const COLS = 11;
+const ROWS = 12;
+const COLS = 12;
 const SEGMENTS = 28;
 const SEG_LEN = 13;
 const LINK_R = 3.5;
 let eyeletFill = null;
 
 const LIGHT_GREY = "#E6E6E6";
-const MEDIUM_GREY = "#B8BABC33"; //transparency
+const MEDIUM_GREY = "#B8BABC33";
 const DARK_GREY = "#B8BABC";
 const GREEN = "#10e41a";
 const BLACK = "#181818";
@@ -46,7 +45,7 @@ function getTheme(color) {
 
     case "dark grey":
       return {
-        box: "#83868B", // no constant defined for this one
+        box: "#83868B",
         bg: LIGHT_GREY,
         eyelet: "#83868B",
         rope: "#83868B",
@@ -56,7 +55,7 @@ function getTheme(color) {
         active: GREEN,
       };
 
-    default: // grey
+    default:
       return {
         box: DARK_GREY,
         bg: LIGHT_GREY,
@@ -161,7 +160,6 @@ export default function PhysicsCanvas({
         eyeletFill = themeRef.current.eyelet;
       }
     } else {
-      // mode === "create" or "default"
       eyeletFill = themeRef.current.box;
     }
 
@@ -207,11 +205,9 @@ export default function PhysicsCanvas({
     let secondEyelet = null;
     let ropeFigures = [];
     let tempRope = null;
-    // let activeBoxFigureRef = null;
     let nextFigureId = 0;
     let nextEyeletId = 0;
     let nextRopeId = 0;
-    // let mode = "select";
 
     // --- Engine ---
     const engine = Engine.create({ gravity: { y: 1.5 } });
@@ -546,9 +542,7 @@ export default function PhysicsCanvas({
       );
       if (unavailable) return;
 
-      // console.log({ minCol, maxCol, minRow, maxRow });
       const boxSize = (maxCol - minCol) * (maxRow - minRow);
-      // console.log(boxSize);
       if (boxSize < 1) return;
 
       const eyelets = [
@@ -930,8 +924,6 @@ export default function PhysicsCanvas({
     function onUp() {
       if (firstBox && secondBox) {
         createBoxFigure();
-        // activeBoxFigureRef.current = boxFigures[boxFigures.length - 1];
-        // setActiveBoxReference();
       }
 
       if (tempRope) {
@@ -1013,7 +1005,6 @@ export default function PhysicsCanvas({
     canvas.addEventListener("mousemove", onMove);
     canvas.addEventListener("mouseup", onUp);
     canvas.addEventListener("mouseleave", onUp);
-    // document.addEventListener("keydown", onKeydown);
 
     Events.on(render, "afterRender", () => {
       const ctx = render.context;
@@ -1058,7 +1049,6 @@ export default function PhysicsCanvas({
       canvas.removeEventListener("mousemove", onMove);
       canvas.removeEventListener("mouseup", onUp);
       canvas.removeEventListener("mouseleave", onUp);
-      // document.removeEventListener("keydown", onKeydown);
       Events.off(render, "afterRender");
       Render.stop(render);
       Runner.stop(runner);
