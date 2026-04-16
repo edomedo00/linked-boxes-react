@@ -229,9 +229,6 @@ input[type="range"]::-webkit-slider-thumb {
   background-color: #10e41a;
 }
 
-.download-text {
-}
-
 .canvas-container {
   display: grid;
   grid-template-rows: 1fr min-content;
@@ -245,10 +242,6 @@ input[type="range"]::-webkit-slider-thumb {
   min-height: 0;
   overflow: hidden;
   margin-bottom: 3rem;
-}
-
-.canvas {
-  /* height: auto; */
 }
 
 .box-controls {
@@ -318,6 +311,11 @@ input[type="range"]::-webkit-slider-thumb {
 .btn-box-controls.active .plus-symbol-2 {
   height: 20px;
   transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.controls-box-divider {
+  border-right: solid 1.5px #f4f5f5;
+  height: 3.3rem;
 }
 
 .box-controls-icons {
